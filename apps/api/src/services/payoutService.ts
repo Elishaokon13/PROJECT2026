@@ -487,6 +487,7 @@ export async function payoutServicePlugin(fastify: FastifyInstance): Promise<voi
     fastify.db,
     fastify.ledgerService,
     fastify.idempotencyService,
+    fastify.webhookService,
   );
   fastify.decorate('payoutService', payoutService);
 }
