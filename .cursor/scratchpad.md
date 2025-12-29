@@ -168,16 +168,23 @@ Ledger.settle() OR Ledger.release()
 - ✅ Routes follow thin controller pattern
 
 ### Phase 6: Services (Orchestration)
+- [x] **Payout orchestration service** ✅ (state machine, ledger integration, idempotency)
+- [x] **Identity service** ✅ (verification orchestration, adapter integration)
+- [x] **Wallet service** ✅ (identity enforcement, provider integration ready)
 - [ ] Payment processing service (webhook → ledger update)
-- [ ] Payout orchestration service (ledger debit → off-ramp → webhook)
-- [ ] User onboarding service (create user → KYC → create wallet)
+- [ ] User service (create, get, list - routes exist, service needs implementation)
 - [ ] Webhook dispatch service (retry logic, delivery tracking)
 
 **Success Criteria:**
-- Services coordinate domain logic correctly
-- Transaction boundaries are clear
-- Error handling is comprehensive
-- Services are testable
+- ✅ Payout service coordinates ledger, state machine, and idempotency
+- ✅ Identity service orchestrates verification flow
+- ✅ Wallet service enforces identity verification
+- ✅ Services coordinate domain logic correctly
+- ✅ Transaction boundaries are clear
+- ✅ Error handling is comprehensive
+- [ ] Payment processing service pending
+- [ ] User service needs implementation
+- [ ] Webhook dispatch service pending
 
 ### Phase 7: SDK
 - [ ] SDK client class (API key, base URL)
