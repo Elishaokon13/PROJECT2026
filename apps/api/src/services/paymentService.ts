@@ -34,6 +34,7 @@ export class PaymentService {
   constructor(
     private readonly db: FastifyInstance['db'],
     private readonly ledgerService: LedgerService,
+    private readonly webhookService?: FastifyInstance['webhookService'],
   ) {
     this.transaction = new Transaction(db);
   }
