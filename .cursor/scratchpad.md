@@ -33,6 +33,61 @@ Building **Openly**, an API-first payments infrastructure that allows businesses
 4. **Webhook Reliability**: Webhook delivery must be retry-safe and observable.
 5. **KYC Integration**: Identity verification flow must be seamless but secure.
 
+## Architectural Principles (Why This Structure Works)
+
+### 1. domain/ is Sacred
+All money logic lives here:
+- Ledger invariants
+- Balance checks
+- Payout state machines
+- **Nothing in routes/ is allowed to move money directly**
+
+### 2. routes/ are Thin
+Routes:
+- Validate input (Zod)
+- Call domain/service
+- Return response
+This prevents "fat controllers" — the #1 Node infra failure.
+
+### 3. adapters/ Isolate Vendors
+Coinbase, Zerocard, KYC providers never leak into domain logic.
+This gives you:
+- Provider swap flexibility
+- Easier testing
+- Cleaner mental model
+- **Adapters cannot call DB directly**
+
+### 4. SDK is First-Class Citizen
+SDK lives beside the API, not as an afterthought.
+This enforces:
+- API discipline
+- DX empathy
+- Type reuse
+- **SDK cannot contain business logic**
+
+### Correct Payout Flow Example
+```
+API Route (validate)
+  ↓
+PayoutService
+  ↓
+Ledger.lockFunds() (atomic, idempotent)
+  ↓
+OfframpAdapter.createTransfer()
+  ↓
+WebhookHandler (provider)
+  ↓
+Ledger.settle() OR Ledger.release()
+```
+
+**No shortcuts. No hacks.**
+
+### Key Domain Module Ownership
+- **domain/ledger**: LedgerEntry, BalanceSnapshot, lock/unlock, idempotency. **Most important folder.**
+- **domain/payouts**: PayoutIntent, state machine, retry logic, reconciliation
+- **domain/wallets**: Wallet lifecycle, user binding, deposit addresses
+- **domain/identity**: KYC status, identity → wallet gating
+
 ## High-level Task Breakdown
 
 ### Phase 1: Foundation Setup ✅
