@@ -140,14 +140,17 @@ Ledger.settle() OR Ledger.release()
 ### Phase 4: Adapters (External Providers)
 - [ ] Coinbase CDP wallet adapter (create wallet, get balance, receive webhooks)
 - [ ] Zerocard off-ramp adapter (initiate payout, check status)
-- [ ] KYC provider adapter (submit verification, check status)
+- [x] **KYC provider adapter** ✅ (structure in place, needs actual provider integration)
 - [ ] Notification adapter (webhook delivery with retries)
 
 **Success Criteria:**
+- ✅ Identity adapter structure in place (placeholder implementation)
 - Adapters abstract provider-specific details
 - Error handling is consistent
 - Retry logic for transient failures
 - Adapters are testable with mocks
+- [ ] Coinbase CDP adapter needs implementation
+- [ ] Zerocard adapter needs implementation
 
 ### Phase 5: API Layer
 - [ ] Authentication plugin (API key validation)
