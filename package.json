@@ -1,0 +1,26 @@
+{
+  "name": "openly",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API-first payments infrastructure for stablecoin payments",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "db:migrate": "npm run db:migrate --workspace=apps/api",
+    "db:generate": "npm run db:generate --workspace=apps/api"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
