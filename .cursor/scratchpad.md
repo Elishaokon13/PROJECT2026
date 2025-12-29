@@ -241,7 +241,20 @@ Ledger.settle() OR Ledger.release()
 
 ## Executor's Feedback or Assistance Requests
 
-None at this time.
+**Note on Linting Errors:**
+Current TypeScript linting errors are expected and will resolve after running `npm install`. The errors are due to missing type definitions for:
+- `fastify` and `@fastify/*` packages
+- `zod` package
+- `@prisma/client` package
+
+These are all listed in `apps/api/package.json` dependencies and will be available after installation.
+
+**API Scaffolding Complete:**
+- All route handlers follow the thin controller pattern
+- Idempotency middleware is in place for money-moving endpoints (payouts)
+- Error handling is centralized and type-safe
+- Authentication plugin ready (needs database integration)
+- All architectural guardrails are enforced via code structure and comments
 
 ## Lessons
 
