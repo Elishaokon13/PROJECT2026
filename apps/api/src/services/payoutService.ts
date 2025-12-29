@@ -5,6 +5,8 @@
 import type { FastifyInstance } from 'fastify';
 import { LedgerService } from './ledgerService.js';
 import { PayoutStateMachine } from '../domain/payouts/index.js';
+import { ZerocardOfframpAdapter } from '../adapters/offramp/index.js';
+import { ProviderError } from '../errors/index.js';
 import type {
   CheckIdempotencyParams,
   StoreIdempotencyParams,
