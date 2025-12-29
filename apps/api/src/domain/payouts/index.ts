@@ -1,7 +1,7 @@
 // Payout domain
 // State machine for payout orchestration
 
-export { PayoutStateMachine } from './state-machine.js';
+export { PayoutStateMachine } from './stateMachine.js';
 export type {
   PayoutStatus,
   PayoutIntent,
