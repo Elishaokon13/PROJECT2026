@@ -3,7 +3,7 @@
 // CRITICAL: Only transforms, never modifies domain models
 
 import type { User as PrismaUser } from '@prisma/client';
-import { toPublicId } from '../lib/public-ids.js';
+import { toPublicId } from '../lib/publicIds.js';
 import type { User } from '../../sdk/src/types/api.js';
 import type { UserResult } from '../services/user-service.js';
 
