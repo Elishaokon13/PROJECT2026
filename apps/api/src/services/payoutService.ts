@@ -333,9 +333,47 @@ export class PayoutService {
           },
         });
       }
+
+      // Dispatch webhook to merchant
+      if (this.webhookService) {
+        const wallet = await this.db.wallet.findUnique({ where: { id: payout.walletId } });
+        if (wallet) {
+          await this.webhookService.createAndDispatch({
+            merchantId: wallet.merchantId,
+            event: 'payout.completed',
+            payload: {
+              id: payout.id,
+              wallet_id: payout.walletId,
+              amount: payout.amount,
+              currency: payout.currency,
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            },
+          });
+        }
+      }
     } else if (status === 'failed') {
       // Transition to FAILED and release funds
       await this.failPayout(payout.id, 'Provider reported failure', error);
+
+      // Dispatch webhook to merchant
+      if (this.webhookService) {
+        const wallet = await this.db.wallet.findUnique({ where: { id: payout.walletId } });
+        if (wallet) {
+          await this.webhookService.createAndDispatch({
+            merchantId: wallet.merchantId,
+            event: 'payout.failed',
+            payload: {
+              id: payout.id,
+              wallet_id: payout.walletId,
+              amount: payout.amount,
+              currency: payout.currency,
+              status: 'failed',
+              failure_reason: error ?? 'Provider reported failure',
+            },
+          });
+        }
+      }
     }
   }
 
