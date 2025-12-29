@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse } from '../types/index.js';
 import { transformWallet } from '../transformers/wallet-transformer.js';
-import { fromPublicId, toPublicId } from '../lib/public-ids.js';
+import { fromPublicId, toPublicId } from '../lib/publicIds.js';
 
 const createWalletSchema = z.object({
   userId: z.string().uuid(),
