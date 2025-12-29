@@ -3,7 +3,6 @@
 
 import type { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { UnauthorizedError } from '../errors/index.js';
-import { config } from '../config/index.js';
 
 // Extend FastifyRequest to include merchant info
 declare module 'fastify' {
