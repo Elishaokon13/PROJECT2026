@@ -6,7 +6,7 @@ import { z } from 'zod';
 import type { IdempotentRequest, ApiResponse, AuthenticatedRequest } from '../types/index.js';
 import { idempotencyMiddleware } from '../lib/idempotency.js';
 import { transformPayout } from '../transformers/payout-transformer.js';
-import { fromPublicId } from '../lib/public-ids.js';
+import { fromPublicId } from '../lib/publicIds.js';
 
 const createPayoutSchema = z.object({
   walletId: z.string().uuid(),
