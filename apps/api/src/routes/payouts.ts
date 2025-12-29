@@ -5,7 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { IdempotentRequest, ApiResponse, AuthenticatedRequest } from '../types/index.js';
 import { idempotencyMiddleware } from '../lib/idempotency.js';
-import { transformPayout } from '../transformers/payout-transformer.js';
+import { transformPayout } from '../transformers/payoutTransformer.js';
 import { fromPublicId } from '../lib/publicIds.js';
 
 const createPayoutSchema = z.object({
