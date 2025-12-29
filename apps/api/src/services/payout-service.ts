@@ -1,17 +1,10 @@
-// Payout service - orchestrates payout creation
-// Integrates ledger and idempotency at domain level
+// Payout service - orchestrates payout creation with state machine
+// Integrates ledger, idempotency, and state machine at domain level
+// CRITICAL: External provider calls must not happen without locked funds
 
 import type { FastifyInstance } from 'fastify';
 import { LedgerService } from './ledger-service.js';
-import type {
-  CreditParams,
-  DebitParams,
-  LockFundsParams,
-  ReleaseFundsParams,
-  SettleFundsParams,
-  Balance,
-  LedgerEntryResult,
-} from '../domain/ledger/types.js';
+import { PayoutStateMachine } from '../domain/payouts/index.js';
 import type {
   CheckIdempotencyParams,
   StoreIdempotencyParams,
@@ -19,6 +12,7 @@ import type {
 } from '../domain/idempotency/types.js';
 import { NotFoundError, ValidationError } from '../errors/index.js';
 import type { Currency, MoneyAmount } from '../types/index.js';
+import type { PayoutStatus } from '../domain/payouts/types.js';
 
 export interface CreatePayoutParams {
   merchantId: string;
