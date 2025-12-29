@@ -344,11 +344,75 @@ export class PayoutService {
       walletId: payout.walletId,
       amount: payout.amount,
       currency: payout.currency as Currency,
-      status: payout.status as PayoutResult['status'],
+      status: payout.status as PayoutStatus,
       idempotencyKey: payout.idempotencyKey,
-      lockEntryId: payout.lockEntryId ?? '',
+      lockEntryId: payout.lockEntryId,
+      providerPayoutId: payout.providerPayoutId,
       createdAt: payout.createdAt,
     };
+  }
+
+  /**
+   * Retry a failed payout
+   * Only works if payout is in FAILED state and has lockEntryId
+   */
+  async retryPayout(payoutId: string): Promise<PayoutResult> {
+    const payout = await this.db.payout.findUnique({
+      where: { id: payoutId },
+    });
+
+    if (!payout) {
+      throw new NotFoundError('Payout', payoutId);
+    }
+
+    if (payout.status !== 'FAILED') {
+      throw new ValidationError(`Cannot retry payout in ${payout.status} state`);
+    }
+
+    // Increment retry count
+    await this.db.payout.update({
+      where: { id: payoutId },
+      data: {
+        retryCount: payout.retryCount + 1,
+        lastRetryAt: new Date(),
+      },
+    });
+
+    // Re-lock funds if needed
+    if (!payout.lockEntryId) {
+      const lockEntry = await this.ledgerService.lockFunds({
+        walletId: payout.walletId,
+        currency: payout.currency as Currency,
+        amount: payout.amount,
+        idempotencyKey: `${payout.idempotencyKey}-retry-${payout.retryCount}`,
+        description: `Retry payout to ${payout.recipientName}`,
+        metadata: {
+          payoutId: payout.id,
+          retryCount: payout.retryCount + 1,
+        },
+      });
+
+      await this.stateMachine.transitionToFundsLocked({
+        payoutId,
+        lockEntryId: lockEntry.id,
+      });
+    }
+
+    // Send to provider again
+    const providerPayoutId = await this.sendToProvider(payout.id, {
+      amount: payout.amount,
+      currency: payout.currency as Currency,
+      recipientAccount: payout.recipientAccount,
+      recipientName: payout.recipientName,
+      recipientBankCode: payout.recipientBankCode ?? undefined,
+    });
+
+    await this.stateMachine.transitionToSentToProvider({
+      payoutId,
+      providerPayoutId,
+    });
+
+    return this.getPayout(payout.wallet.merchantId, payoutId) as Promise<PayoutResult>;
   }
 }
 
