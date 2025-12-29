@@ -152,19 +152,20 @@ Ledger.settle() OR Ledger.release()
 - [ ] Coinbase CDP adapter needs implementation
 - [ ] Zerocard adapter needs implementation
 
-### Phase 5: API Layer
-- [ ] Authentication plugin (API key validation)
-- [ ] Database plugin (Prisma client injection)
-- [ ] CORS and rate limiting plugins
-- [ ] Route handlers (users, wallets, payouts, webhooks)
-- [ ] Request/response validation with Zod
-- [ ] Idempotency middleware for money-moving endpoints
+### Phase 5: API Layer ✅
+- [x] Authentication plugin (API key validation - needs DB integration)
+- [x] Database plugin (Prisma client injection)
+- [x] CORS and rate limiting plugins
+- [x] Route handlers (health, users, identity, wallets, payouts, webhooks)
+- [x] Request/response validation with Zod
+- [x] Idempotency middleware for money-moving endpoints
 
 **Success Criteria:**
-- All endpoints have request/response validation
-- API key authentication works
-- Idempotency keys are respected
-- Error responses are consistent
+- ✅ All endpoints have request/response validation
+- ⏳ API key authentication works (structure ready, needs DB lookup)
+- ✅ Idempotency keys are respected
+- ✅ Error responses are consistent
+- ✅ Routes follow thin controller pattern
 
 ### Phase 6: Services (Orchestration)
 - [ ] Payment processing service (webhook → ledger update)
