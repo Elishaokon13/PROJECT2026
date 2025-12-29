@@ -3,7 +3,7 @@
 // CRITICAL: Only exposes public fields, hides internal ledger details
 
 import type { Transaction as PrismaTransaction } from '@prisma/client';
-import { toPublicId } from '../lib/public-ids.js';
+import { toPublicId } from '../lib/publicIds.js';
 import type { Transaction } from '../../sdk/src/types/api.js';
 
 // Note: Transaction type needs to be added to SDK types
