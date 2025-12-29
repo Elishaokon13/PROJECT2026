@@ -22,16 +22,40 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call WebhookService.getById()
+      // Convert public ID to internal ID
+      const internalWebhookId = fromPublicId('webhook', request.params.webhookId);
+      
+      const webhookEvent = await fastify.webhookService.getWebhookEvent(
+        request.merchant.id,
+        internalWebhookId,
+      );
+
+      if (!webhookEvent) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Webhook event with id ${request.params.webhookId} not found`,
+          },
+        });
+      }
+
+      // Get full webhook from DB to transform
+      const fullWebhook = await fastify.db.webhookEvent.findUnique({
+        where: { id: webhookEvent.id },
+      });
+
+      if (!fullWebhook) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Webhook event with id ${request.params.webhookId} not found`,
+          },
+        });
+      }
+
       return reply.send({
-        data: {
-          id: request.params.webhookId,
-          event: 'payout.completed',
-          payload: {},
-          status: 'delivered',
-          createdAt: new Date().toISOString(),
-        },
-      } satisfies ApiResponse<unknown>);
+        data: transformWebhook(fullWebhook),
+      });
     },
   );
 
