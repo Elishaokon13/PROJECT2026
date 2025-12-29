@@ -4,7 +4,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse } from '../types/index.js';
-import { transformWebhook } from '../transformers/webhook-transformer.js';
+import { transformWebhook } from '../transformers/webhookTransformer.js';
 import type { Currency } from '../types/index.js';
 
 const getWebhookParamsSchema = z.object({
