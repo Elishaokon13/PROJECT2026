@@ -10,13 +10,245 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// TODO: Define domain models
-// - Merchant (API key holder)
-// - User (merchant's end users/recipients)
-// - Wallet (per user, linked to Coinbase CDP)
-// - Transaction (inbound stablecoin payments)
-// - Payout (outbound stablecoin → fiat)
-// - LedgerEntry (internal ledger, source of truth)
-// - IdentityVerification (KYC status)
-// - WebhookEvent (webhook dispatch tracking)
+// ============================================================================
+// LEDGER MODELS (Source of Truth)
+// ============================================================================
 
+// LedgerEntry represents a single entry in the double-entry ledger
+// Every money movement creates at least one ledger entry
+model LedgerEntry {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Account identification
+  walletId  String   // Wallet/user account identifier
+  currency  String   // Currency code (USDC, USDT, NGN)
+  
+  // Entry details
+  entryType EntryType // CREDIT, DEBIT, LOCK, RELEASE, SETTLE
+  amount    String   // Decimal string (e.g., "100.50") - always positive
+  
+  // Transaction tracking
+  transactionId String? // Links related entries (for double-entry)
+  idempotencyKey String? @unique // Prevents duplicate operations
+  
+  // Status tracking
+  status EntryStatus @default(PENDING) // PENDING, SETTLED, CANCELLED
+  
+  // Metadata
+  description String? // Human-readable description
+  metadata    Json?    // Additional context (payout ID, payment ID, etc.)
+  
+  // References
+  relatedEntryId String? // Links to related entry (e.g., LOCK -> SETTLE/RELEASE)
+  
+  // Indexes for performance
+  @@index([walletId, currency, status])
+  @@index([idempotencyKey])
+  @@index([transactionId])
+  @@index([createdAt])
+}
+
+enum EntryType {
+  CREDIT  // Money added to account (inbound payment)
+  DEBIT   // Money removed from account (payout, withdrawal)
+  LOCK    // Funds locked for pending operation
+  RELEASE // Funds unlocked (operation cancelled)
+  SETTLE  // Funds settled (operation completed)
+}
+
+enum EntryStatus {
+  PENDING  // Entry is pending settlement
+  SETTLED  // Entry is settled and affects balance
+  CANCELLED // Entry was cancelled
+}
+
+// BalanceSnapshot represents a computed balance at a point in time
+// Used for reconciliation and performance (can be materialized view or computed)
+// For MVP, we'll compute balances on-demand from LedgerEntry
+// In production, consider materialized views or periodic snapshots
+
+// ============================================================================
+// SUPPORTING MODELS (Referenced by Ledger)
+// ============================================================================
+
+// Merchant (API key holder)
+model Merchant {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  name      String
+  apiKey    String   @unique
+  active    Boolean  @default(true)
+  
+  // Relations
+  users     User[]
+  wallets   Wallet[]
+}
+
+// User (merchant's end users/recipients)
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  
+  email       String
+  firstName   String
+  lastName    String
+  phoneNumber String?
+  metadata    Json?
+  
+  // Relations
+  wallets            Wallet[]
+  identityVerification IdentityVerification?
+}
+
+// Wallet (per user, linked to Coinbase CDP)
+model Wallet {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  currency String // USDC, USDT
+  address  String // Blockchain address (from Coinbase CDP)
+  
+  // Provider integration
+  providerWalletId String? // Coinbase CDP wallet ID
+  active            Boolean @default(true)
+}
+
+// Identity Verification (KYC status)
+model IdentityVerification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status      VerificationStatus @default(PENDING)
+  provider    String? // KYC provider name
+  providerId  String? // Provider's verification ID
+  verifiedAt  DateTime?
+  metadata    Json?
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+// Transaction (inbound stablecoin payments)
+model Transaction {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  
+  amount   String // Decimal string
+  currency String // USDC, USDT
+  
+  // Blockchain details
+  txHash      String? @unique // Blockchain transaction hash
+  blockNumber BigInt?
+  fromAddress String?
+  toAddress   String?
+  
+  // Status
+  status TransactionStatus @default(PENDING)
+  
+  // Provider integration
+  providerTransactionId String? // Coinbase CDP transaction ID
+  metadata              Json?
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+// Payout (outbound stablecoin → fiat)
+model Payout {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  
+  amount   String // Decimal string
+  currency String // USDC, USDT
+  
+  // Recipient details
+  recipientAccount String
+  recipientName    String
+  recipientBankCode String?
+  
+  // Status
+  status PayoutStatus @default(PENDING)
+  
+  // Idempotency
+  idempotencyKey String @unique
+  
+  // Provider integration
+  providerPayoutId String? // Zerocard payout ID
+  providerStatus   String?
+  
+  // Ledger tracking
+  lockEntryId String? // LedgerEntry ID for the LOCK operation
+  
+  metadata Json?
+}
+
+enum PayoutStatus {
+  PENDING    // Created, funds locked
+  PROCESSING // Sent to provider
+  COMPLETED  // Successfully completed
+  FAILED     // Failed, funds released
+  CANCELLED  // Cancelled, funds released
+}
+
+// Webhook Event (webhook dispatch tracking)
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  
+  event     String // Event type (e.g., "payout.completed")
+  payload   Json
+  status    WebhookStatus @default(PENDING)
+  
+  // Delivery tracking
+  attempts      Int      @default(0)
+  lastAttemptAt DateTime?
+  deliveredAt   DateTime?
+  errorMessage  String?
+  
+  // URL
+  url String
+}
+
+enum WebhookStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
