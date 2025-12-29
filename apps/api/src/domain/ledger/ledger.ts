@@ -2,7 +2,7 @@
 // CRITICAL: This is the source of truth for all balances
 // All money movements MUST go through this module
 
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import {
   InsufficientFundsError,
@@ -17,6 +17,8 @@ import type {
   SettleFundsParams,
   Balance,
   LedgerEntryResult,
+  EntryType,
+  EntryStatus,
 } from './types.js';
 import type { MoneyAmount, Currency } from '../../types/index.js';
 
