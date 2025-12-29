@@ -210,22 +210,34 @@ Ledger.settle() OR Ledger.release()
 
 ## Current Status / Progress Tracking
 
-**Current Phase:** Phase 1 - Foundation Setup
+**Current Phase:** Phase 5 - API Layer (Scaffolded)
 
 **Completed:**
 - ✅ Created complete folder structure as specified
 - ✅ Set up root package.json with workspaces
-- ✅ Created tsconfig.base.json with strict TypeScript settings
+- ✅ Created tsconfig.base.json with strict TypeScript settings (including noUncheckedIndexedAccess, exactOptionalPropertyTypes)
 - ✅ Created .env.example with all required environment variables
 - ✅ Created apps/api structure with all domain modules
 - ✅ Created apps/sdk structure
 - ✅ Created packages structure (db, config, utils)
 - ✅ Created infra and docs directories
 - ✅ Created placeholder files for key components
+- ✅ **Scaffolded Fastify API:**
+  - Error handling taxonomy (AppError, NotFoundError, ValidationError, etc.)
+  - Authentication plugin (API key validation)
+  - Database plugin (Prisma client placeholder)
+  - CORS and rate limiting plugins
+  - Idempotency middleware for money-moving endpoints
+  - Route handlers: health, users, wallets, payouts, webhooks
+  - All routes follow thin controller pattern (validate → delegate → return)
+  - Zod schemas for request/response validation
+  - TypeScript types for authenticated requests, idempotent requests, pagination
 
 **Next Steps:**
-- Proceed to Phase 2: Database & Prisma Setup
-- Design the Prisma schema with all core entities
+1. Install dependencies: `npm install` (will resolve TypeScript linting errors)
+2. Proceed to Phase 2: Database & Prisma Setup
+3. Design the Prisma schema with all core entities
+4. Implement domain services (replace placeholders in routes)
 
 ## Executor's Feedback or Assistance Requests
 
