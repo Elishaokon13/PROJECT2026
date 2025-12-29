@@ -3,7 +3,7 @@
 // CRITICAL: External provider calls must not happen without locked funds
 
 import type { FastifyInstance } from 'fastify';
-import { LedgerService } from './ledger-service.js';
+import { LedgerService } from './ledgerService.js';
 import { PayoutStateMachine } from '../domain/payouts/index.js';
 import type {
   CheckIdempotencyParams,
