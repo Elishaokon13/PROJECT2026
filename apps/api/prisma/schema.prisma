@@ -252,3 +252,47 @@ enum WebhookStatus {
   DELIVERED
   FAILED
 }
+
+// ============================================================================
+// IDEMPOTENCY MODEL
+// ============================================================================
+
+// IdempotencyKey tracks idempotent requests to prevent duplicate operations
+// Keys are scoped per merchant to prevent cross-merchant conflicts
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Key identification (scoped per merchant)
+  merchantId     String
+  merchant       Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  key            String   // The idempotency key value
+  
+  // Request tracking
+  requestHash    String   // SHA-256 hash of request body (prevents payload changes)
+  requestMethod  String   // HTTP method (GET, POST, etc.)
+  requestPath    String   // API path (e.g., "/api/v1/payouts")
+  
+  // Response tracking
+  statusCode     Int      // HTTP status code of response
+  responseBody   Json     // Stored response body
+  responseHeaders Json?   // Stored response headers (if needed)
+  
+  // Status
+  status IdempotencyStatus @default(PENDING) // PENDING, COMPLETED, FAILED
+  
+  // Timing
+  completedAt DateTime? // When request completed
+  
+  // Unique constraint: same merchant + key combination
+  @@unique([merchantId, key])
+  @@index([merchantId, key])
+  @@index([createdAt])
+}
+
+enum IdempotencyStatus {
+  PENDING   // Request in progress
+  COMPLETED // Request completed successfully
+  FAILED    // Request failed
+}
