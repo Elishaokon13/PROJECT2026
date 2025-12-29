@@ -99,9 +99,67 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
           }
         }
       } else if (request.params.provider === 'coinbase') {
-        // TODO: Handle Coinbase CDP payment webhook
-        // - Payment received → credit ledger
-        // - Update transaction status
+        // Handle Coinbase CDP payment webhook
+        // Expected payload structure (adjust based on actual Coinbase CDP webhook format):
+        // {
+        //   event: 'payment.received',
+        //   walletId: 'coinbase-wallet-id',
+        //   amount: '100.00',
+        //   currency: 'USDC',
+        //   txHash: '0x...',
+        //   fromAddress: '0x...',
+        //   toAddress: '0x...',
+        //   blockNumber: 12345678
+        // }
+        const body = request.body as {
+          event?: string;
+          walletId?: string;
+          amount?: string;
+          currency?: string;
+          txHash?: string;
+          fromAddress?: string;
+          toAddress?: string;
+          blockNumber?: string | number;
+        };
+
+        if (body.event === 'payment.received' && body.txHash && body.amount && body.currency) {
+          try {
+            // Find wallet by provider wallet ID (Coinbase CDP wallet ID)
+            const wallet = await fastify.db.wallet.findFirst({
+              where: {
+                providerWalletId: body.walletId,
+              },
+            });
+
+            if (!wallet) {
+              fastify.log.warn({ body }, 'Coinbase webhook: Wallet not found for provider wallet ID');
+              return reply.status(200).send({ received: true, processed: false });
+            }
+
+            // Process payment (creates transaction, credits ledger)
+            await fastify.paymentService.processPayment({
+              walletId: wallet.id,
+              amount: body.amount,
+              currency: body.currency as Currency,
+              txHash: body.txHash,
+              fromAddress: body.fromAddress,
+              toAddress: body.toAddress,
+              blockNumber: body.blockNumber ? BigInt(body.blockNumber) : undefined,
+              metadata: {
+                provider: 'coinbase',
+                providerWalletId: body.walletId,
+              },
+            });
+
+            fastify.log.info({ txHash: body.txHash, walletId: wallet.id }, 'Coinbase payment processed');
+            return reply.status(200).send({ received: true, processed: true });
+          } catch (error) {
+            fastify.log.error({ err: error, body }, 'Failed to process Coinbase payment webhook');
+            // Return 200 to prevent Coinbase from retrying endlessly
+            return reply.status(200).send({ received: true, processed: false });
+          }
+        }
+
         return reply.status(200).send({ received: true });
       } else if (request.params.provider === 'kyc') {
         // Handle KYC provider webhook (identity verification)
