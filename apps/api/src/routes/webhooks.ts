@@ -67,16 +67,26 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       preHandler: [fastify.authenticate],
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call WebhookService.list()
-      return reply.send({
-        data: [],
-        pagination: {
-          limit: 20,
-          offset: 0,
-          total: 0,
-          hasMore: false,
-        },
+      const limit = Number(request.query.limit) || 20;
+      const offset = Number(request.query.offset) || 0;
+
+      const result = await fastify.webhookService.listWebhookEvents(request.merchant.id, {
+        limit,
+        offset,
       });
+
+      return reply.send({
+        data: result.data.map((event) => {
+          const fullEvent = fastify.db.webhookEvent.findUnique({ where: { id: event.id } });
+          return fullEvent ? transformWebhook(fullEvent) : null;
+        }).filter(Boolean),
+        pagination: {
+          limit,
+          offset,
+          total: result.total,
+          has_more: offset + limit < result.total,
+        },
+      } satisfies PaginatedResponse<unknown>);
     },
   );
 
