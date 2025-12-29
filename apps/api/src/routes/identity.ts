@@ -3,6 +3,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse } from '../types/index.js';
+import { fromPublicId } from '../lib/public-ids.js';
+import { transformIdentityVerification } from '../transformers/identity-transformer.js';
 
 const submitVerificationSchema = z.object({
   userId: z.string().uuid(),
