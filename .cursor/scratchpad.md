@@ -45,7 +45,7 @@ All money logic lives here:
 ### 2. routes/ are Thin
 Routes:
 - Validate input (Zod)
-- Call domain/service
+- Call domain/service layer
 - Return response
 This prevents "fat controllers" — the #1 Node infra failure.
 
@@ -106,7 +106,7 @@ Ledger.settle() OR Ledger.release()
 - All domain modules have placeholder files
 
 ### Phase 2: Database & Prisma Setup ✅
-- [x] Design Prisma schema (Merchant, User, Wallet, Transaction, Payout, LedgerEntry, IdentityVerification, WebhookEvent)
+- [x] Design Prisma schema (Merchant, User, Wallet, Transaction, Payout, LedgerEntry, IdentityVerification, WebhookEvent, IdempotencyKey)
 - [x] Set up Prisma client generation
 - [ ] Create initial migration (ready, needs `npm run db:migrate`)
 - [x] Update database plugin with Prisma client
@@ -215,11 +215,18 @@ Ledger.settle() OR Ledger.release()
 ## Project Status Board
 
 - [x] Create folder structure
-- [ ] Design Prisma schema
-- [ ] Implement domain models
-- [ ] Implement adapters
-- [ ] Implement API layer
-- [ ] Implement services
+- [x] Design Prisma schema
+- [x] Implement ledger domain
+- [x] Implement idempotency domain
+- [x] Implement payout state machine
+- [x] Implement identity verification
+- [x] Scaffold API layer
+- [ ] Run database migrations
+- [ ] Implement user service
+- [ ] Implement transaction domain
+- [ ] Implement Coinbase CDP adapter
+- [ ] Implement Zerocard adapter
+- [ ] Implement webhook dispatch service
 - [ ] Implement SDK
 - [ ] Write tests
 - [ ] Write documentation
@@ -241,10 +248,10 @@ Ledger.settle() OR Ledger.release()
 - ✅ **Scaffolded Fastify API:**
   - Error handling taxonomy (AppError, NotFoundError, ValidationError, etc.)
   - Authentication plugin (API key validation)
-  - Database plugin (Prisma client placeholder)
+  - Database plugin (Prisma client)
   - CORS and rate limiting plugins
   - Idempotency middleware for money-moving endpoints
-  - Route handlers: health, users, wallets, payouts, webhooks
+  - Route handlers: health, users, identity, wallets, payouts, webhooks
   - All routes follow thin controller pattern (validate → delegate → return)
   - Zod schemas for request/response validation
   - TypeScript types for authenticated requests, idempotent requests, pagination
@@ -383,4 +390,5 @@ These are all listed in `apps/api/package.json` dependencies and will be availab
 - Workspace setup allows shared packages between API and SDK
 - **Architectural guardrails**: Domain is sacred, routes are thin, adapters isolate vendors, SDK is first-class
 - **Guardrails enforced**: No route may mutate balances directly, ledger before external calls, idempotency on all money endpoints
-
+- **State machine pattern**: Explicit states prevent invalid transitions and ensure atomic operations
+- **Identity gating**: Wallet creation properly enforces identity verification at service level
