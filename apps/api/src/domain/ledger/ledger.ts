@@ -2,7 +2,7 @@
 // CRITICAL: This is the source of truth for all balances
 // All money movements MUST go through this module
 
-import type { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import {
   InsufficientFundsError,
