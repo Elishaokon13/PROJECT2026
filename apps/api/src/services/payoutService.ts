@@ -42,6 +42,7 @@ export interface PayoutResult {
 
 export class PayoutService {
   private stateMachine: PayoutStateMachine;
+  private offrampAdapter: ZerocardOfframpAdapter;
 
   constructor(
     private readonly db: FastifyInstance['db'],
@@ -49,6 +50,7 @@ export class PayoutService {
     private readonly idempotencyService: FastifyInstance['idempotencyService'],
   ) {
     this.stateMachine = new PayoutStateMachine(db);
+    this.offrampAdapter = new ZerocardOfframpAdapter();
   }
 
   /**
