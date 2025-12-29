@@ -18,10 +18,10 @@ declare module 'fastify' {
 }
 
 // Register plugins (order matters)
-await registerPlugins(app);
-
-// Register routes
-await registerRoutes(app);
+app.register(async (fastify) => {
+  await registerPlugins(fastify);
+  await registerRoutes(fastify);
+});
 
 // Register error handler
 app.setErrorHandler(errorHandler);
