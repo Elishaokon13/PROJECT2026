@@ -141,7 +141,7 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
       return reply.send({
         data: {
           wallet_id: toPublicId('wallet', internalWalletId),
-          currency: balance.currency,
+          currency: balance.currency as 'USDC' | 'USDT',
           available: balance.available.toString(),
           locked: balance.locked.toString(),
           total: balance.total.toString(),
