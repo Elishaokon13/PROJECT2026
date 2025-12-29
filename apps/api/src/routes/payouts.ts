@@ -72,18 +72,24 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
         params: getPayoutParamsSchema,
       },
     },
-    async (request, reply) => {
-      // TODO: Call PayoutService.getById()
+    async (request: AuthenticatedRequest, reply) => {
+      const payout = await fastify.payoutService.getPayout(
+        request.merchant.id,
+        request.params.payoutId,
+      );
+
+      if (!payout) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Payout with id ${request.params.payoutId} not found`,
+          },
+        });
+      }
+
       return reply.send({
-        data: {
-          id: request.params.payoutId,
-          walletId: 'wallet-id',
-          amount: '100.00',
-          currency: 'USDC',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        },
-      } satisfies ApiResponse<unknown>);
+        data: payout,
+      } satisfies ApiResponse<typeof payout>);
     },
   );
 }
