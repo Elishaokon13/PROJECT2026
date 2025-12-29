@@ -184,7 +184,7 @@ export class Ledger {
     }
 
     // Use transaction to ensure atomicity
-    return await this.db.$transaction(async (tx) => {
+    return await this.db.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create release entry
       const releaseEntry = await tx.ledgerEntry.create({
         data: {
@@ -236,7 +236,7 @@ export class Ledger {
     }
 
     // Use transaction to ensure atomicity
-    return await this.db.$transaction(async (tx) => {
+    return await this.db.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create settle entry
       const settleEntry = await tx.ledgerEntry.create({
         data: {
