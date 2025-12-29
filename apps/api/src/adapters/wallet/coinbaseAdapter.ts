@@ -180,28 +180,61 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
   }
 
   /**
-   * Parse Coinbase CDP webhook payload
+   * Parse Coinbase CDP Embedded Wallets webhook payload
+   * Handles webhooks for embedded wallet events (wallet.created, payment.received, etc.)
    */
   parseWebhook(payload: unknown): WalletWebhookResult {
-    // TODO: Parse actual Coinbase CDP webhook format
-    // Expected structure:
+    // TODO: Parse actual Coinbase CDP Embedded Wallets webhook format
+    // Expected structure based on Coinbase CDP webhook format:
     // {
-    //   event: 'wallet.created' | 'payment.received' | 'payment.failed',
-    //   wallet_id: string,
-    //   data: { ... }
+    //   "event": "wallet.created" | "payment.received" | "payment.failed",
+    //   "wallet_id": "wallet-id",
+    //   "walletSetId": "wallet-set-id",
+    //   "data": {
+    //     "address": "0x...",
+    //     "network": "ethereum",
+    //     "amount": "100.00",
+    //     "currency": "USDC",
+    //     "txHash": "0x...",
+    //     "fromAddress": "0x...",
+    //     "toAddress": "0x...",
+    //     "blockNumber": "12345",
+    //     "status": "confirmed" | "pending" | "failed"
+    //   }
     // }
 
     const webhook = payload as {
       event?: string;
       wallet_id?: string;
       walletId?: string;
-      data?: unknown;
+      walletSetId?: string;
+      data?: {
+        address?: string;
+        network?: string;
+        amount?: string;
+        currency?: string;
+        txHash?: string;
+        fromAddress?: string;
+        toAddress?: string;
+        blockNumber?: string;
+        status?: 'pending' | 'confirmed' | 'failed';
+      };
     };
 
     return {
       event: (webhook.event as WalletWebhookResult['event']) ?? 'payment.received',
       providerWalletId: webhook.wallet_id ?? webhook.walletId ?? '',
-      data: (webhook.data as WalletWebhookResult['data']) ?? {},
+      data: {
+        walletId: webhook.wallet_id ?? webhook.walletId,
+        address: webhook.data?.address,
+        amount: webhook.data?.amount,
+        currency: webhook.data?.currency,
+        txHash: webhook.data?.txHash,
+        fromAddress: webhook.data?.fromAddress,
+        toAddress: webhook.data?.toAddress,
+        blockNumber: webhook.data?.blockNumber,
+        status: webhook.data?.status,
+      },
     };
   }
 
