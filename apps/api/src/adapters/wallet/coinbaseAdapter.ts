@@ -12,9 +12,8 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
   private readonly baseUrl: string;
 
   constructor() {
-    // TODO: Load from config
-    this.apiKey = config.coinbaseApiKey ?? '';
-    this.apiSecret = config.coinbaseApiSecret ?? '';
+    this.apiKey = config.coinbaseApiKey;
+    this.apiSecret = config.coinbaseApiSecret;
     this.baseUrl = config.coinbaseBaseUrl ?? 'https://api.coinbase.com';
   }
 
