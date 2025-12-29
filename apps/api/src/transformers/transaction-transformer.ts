@@ -26,11 +26,11 @@ export function transformTransaction(transaction: PrismaTransaction): Transactio
     wallet_id: toPublicId('wallet', transaction.walletId),
     amount: transaction.amount,
     currency: transaction.currency as 'USDC' | 'USDT',
-    type: transaction.type === 'CREDIT' ? 'credit' : 'debit',
-    status: transaction.status === 'SETTLED' ? 'completed' : transaction.status === 'PENDING' ? 'pending' : 'failed',
-    transaction_hash: transaction.blockchainTxHash ?? undefined,
+    type: 'credit', // Transactions are always credits (inbound payments)
+    status: transaction.status === 'CONFIRMED' ? 'completed' : transaction.status === 'PENDING' ? 'pending' : 'failed',
+    transaction_hash: transaction.txHash ?? undefined,
     created_at: transaction.createdAt.toISOString(),
-    completed_at: transaction.status === 'SETTLED' ? transaction.updatedAt.toISOString() : undefined,
+    completed_at: transaction.status === 'CONFIRMED' ? transaction.updatedAt.toISOString() : undefined,
   };
 }
 
