@@ -26,7 +26,7 @@ export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
   await fastify.register(identityServicePlugin);
   await fastify.register(userServicePlugin);
   await fastify.register(walletServicePlugin);
+  await fastify.register(webhookServicePlugin); // Register before payout/payment services that use it
   await fastify.register(payoutServicePlugin);
   await fastify.register(paymentServicePlugin);
-  await fastify.register(webhookServicePlugin);
 }
