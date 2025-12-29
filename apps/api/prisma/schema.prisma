@@ -84,8 +84,10 @@ model Merchant {
   active    Boolean  @default(true)
   
   // Relations
-  users     User[]
-  wallets   Wallet[]
+  users            User[]
+  wallets          Wallet[]
+  idempotencyKeys  IdempotencyKey[]
+  webhookEvents    WebhookEvent[]
 }
 
 // User (merchant's end users/recipients)
