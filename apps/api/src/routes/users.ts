@@ -4,7 +4,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse, PaginatedResponse } from '../types/index.js';
-import { transformUser } from '../transformers/user-transformer.js';
+import { transformUser } from '../transformers/userTransformer.js';
 import { fromPublicId } from '../lib/publicIds.js';
 
 // Request/Response schemas
