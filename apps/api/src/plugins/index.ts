@@ -13,6 +13,7 @@ import { identityServicePlugin } from '../services/identityService.js';
 import { userServicePlugin } from '../services/userService.js';
 import { walletServicePlugin } from '../services/walletService.js';
 import { paymentServicePlugin } from '../services/paymentService.js';
+import { webhookServicePlugin } from '../services/webhookService.js';
 
 export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
   // Register plugins in order
