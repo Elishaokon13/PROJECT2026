@@ -260,12 +260,19 @@ Ledger.settle() OR Ledger.release()
 
 **Next Steps - Priority Order:**
 
-### Immediate (Foundation)
-1. **Install dependencies and run migrations**
-   - `npm install` (resolve TypeScript errors)
-   - `npm run db:migrate` (create database schema)
-   - `npm run db:generate` (generate Prisma client)
-   - Verify database connection works
+### Immediate (Foundation) - IN PROGRESS
+1. **Install dependencies and run migrations** ✅ PARTIALLY COMPLETE
+   - ✅ `npm install` (completed)
+   - ✅ `npm run db:generate` (Prisma client generated)
+   - ✅ Fixed Prisma schema relations (Wallet model)
+   - ⏳ `npm run db:migrate` (pending - requires DATABASE_URL in .env file)
+   - ⏳ Verify database connection works (pending migration)
+
+**Note:** To complete migrations, create a `.env` file in the project root with:
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/openly?schema=public"
+```
+Then run: `cd apps/api && npm run db:migrate`
 
 ### High Priority (Core Functionality)
 2. **Implement User Service**
