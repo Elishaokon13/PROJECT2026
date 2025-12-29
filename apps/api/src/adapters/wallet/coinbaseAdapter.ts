@@ -240,10 +240,10 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
 
   /**
    * Generate API signature for Coinbase CDP requests
-   * Coinbase CDP requires HMAC-SHA256 signature
+   * Coinbase CDP uses HMAC-SHA256 with timestamp, method, path, and body
+   * Format: HMAC-SHA256(timestamp + method + path + body, apiSecret)
    */
-  private generateSignature(method: string, path: string, body: string): string {
-    const timestamp = Math.floor(Date.now() / 1000);
+  private generateSignature(method: string, path: string, body: string, timestamp: number): string {
     const message = `${timestamp}${method}${path}${body}`;
     return createHmac('sha256', this.apiSecret)
       .update(message)
