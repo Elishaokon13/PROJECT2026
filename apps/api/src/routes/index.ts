@@ -15,6 +15,7 @@ import { userRoutes } from './users.js';
 import { walletRoutes } from './wallets.js';
 import { payoutRoutes } from './payouts.js';
 import { webhookRoutes } from './webhooks.js';
+import { identityRoutes } from './identity.js';
 
 export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
   // Health check (no auth)
@@ -24,6 +25,7 @@ export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(
     async (fastify) => {
       await fastify.register(userRoutes, { prefix: '/v1' });
+      await fastify.register(identityRoutes, { prefix: '/v1' });
       await fastify.register(walletRoutes, { prefix: '/v1' });
       await fastify.register(payoutRoutes, { prefix: '/v1' });
       await fastify.register(webhookRoutes, { prefix: '/v1' });
