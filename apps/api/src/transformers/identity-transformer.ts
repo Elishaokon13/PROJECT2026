@@ -3,8 +3,8 @@
 // CRITICAL: Only transforms, never modifies domain models
 
 import type { IdentityVerification as PrismaIdentityVerification } from '@prisma/client';
-import { toPublicId } from '../lib/public-ids.js';
-import { normalizeVerificationStatus } from '../lib/status-normalizer.js';
+import { toPublicId } from '../lib/publicIds.js';
+import { normalizeVerificationStatus } from '../lib/statusNormalizer.js';
 import type { IdentityVerification } from '../../sdk/src/types/api.js';
 
 export function transformIdentityVerification(
