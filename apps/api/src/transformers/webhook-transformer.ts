@@ -3,7 +3,7 @@
 // CRITICAL: Only exposes public fields
 
 import type { WebhookEvent as PrismaWebhookEvent } from '@prisma/client';
-import { toPublicId } from '../lib/public-ids.js';
+import { toPublicId } from '../lib/publicIds.js';
 import type { WebhookEvent } from '../../sdk/src/types/api.js';
 
 export function transformWebhook(webhook: PrismaWebhookEvent): WebhookEvent {
