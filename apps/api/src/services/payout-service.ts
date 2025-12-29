@@ -50,14 +50,18 @@ export class PayoutService {
   }
 
   /**
-   * Create a payout with idempotency handling at domain level
+   * Create a payout with state machine orchestration
    * Flow:
    * 1. Check idempotency (returns stored response if duplicate)
    * 2. Store idempotency key (if new request)
-   * 3. Lock funds via ledger
-   * 4. Create payout record
-   * 5. Call off-ramp adapter (async)
-   * 6. Complete idempotency with response
+   * 3. Create payout record (status: CREATED)
+   * 4. Lock funds via ledger (atomic)
+   * 5. Transition to FUNDS_LOCKED
+   * 6. Call off-ramp adapter (retry-safe)
+   * 7. Transition to SENT_TO_PROVIDER
+   * 8. Complete idempotency with response
+   * 
+   * CRITICAL: External provider calls only happen after funds are locked
    */
   async createPayout(params: CreatePayoutParams): Promise<PayoutResult> {
     // Step 1: Check idempotency at domain level
