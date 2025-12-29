@@ -103,6 +103,23 @@ export class PaymentService {
         creditedAt: new Date().toISOString(),
       });
 
+      // Step 5: Dispatch webhook to merchant
+      if (this.webhookService) {
+        const wallet = await this.db.wallet.findUnique({ where: { id: params.walletId } });
+        if (wallet) {
+          await this.webhookService.createAndDispatch({
+            merchantId: wallet.merchantId,
+            event: 'payment.received',
+            payload: {
+              wallet_id: params.walletId,
+              amount: params.amount,
+              currency: params.currency,
+              transaction_hash: params.txHash,
+            },
+          });
+        }
+      }
+
       return {
         transactionId: transaction.id,
         walletId: transaction.walletId,
