@@ -33,26 +33,23 @@ async function authenticate(request: FastifyRequest): Promise<void> {
     throw new UnauthorizedError('Missing API key');
   }
 
-  // TODO: Validate API key against database
-  // For now, we'll do a simple check against config (MVP)
-  // In production, this should query the database for the merchant
-  // const merchant = await request.server.db.merchant.findUnique({
-  //   where: { apiKey },
-  // });
-  // if (!merchant || !merchant.active) {
-  //   throw new UnauthorizedError('Invalid or inactive API key');
-  // }
+  // Look up merchant by API key in database
+  const merchant = await (request.server as FastifyInstance).db.merchant.findUnique({
+    where: { apiKey },
+  });
 
-  // Placeholder: For MVP, we'll use a simple validation
-  // In production, replace with database lookup
-  if (apiKey.length < 32) {
+  if (!merchant) {
     throw new UnauthorizedError('Invalid API key');
   }
 
+  if (!merchant.active) {
+    throw new ForbiddenError('Merchant account is inactive');
+  }
+
   // Attach merchant to request
-  request.merchant = {
-    id: 'merchant-placeholder-id', // TODO: Get from database
-    apiKey,
+  (request as AuthenticatedRequest).merchant = {
+    id: merchant.id,
+    apiKey: merchant.apiKey,
   };
 }
 
