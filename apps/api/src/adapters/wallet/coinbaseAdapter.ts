@@ -27,40 +27,64 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
   }
 
   /**
-   * Create wallet via Coinbase CDP API
-   * Documentation: https://docs.cdp.coinbase.com/
+   * Create embedded wallet via Coinbase CDP API
+   * Creates a self-custodial embedded wallet for a user
+   * Documentation: https://docs.cdp.coinbase.com/embedded-wallets
+   * 
+   * Note: Coinbase CDP Embedded Wallets are created per user and are self-custodial.
+   * The wallet is associated with a Wallet Set and can be used immediately.
    */
   async createWallet(params: CreateWalletParams): Promise<CreateWalletResult> {
-    // TODO: Implement actual Coinbase CDP API call
-    // For MVP, return mock data
-    // In production, this would:
-    // 1. Call Coinbase CDP POST /v1/wallets
-    // 2. Handle authentication (API key + signature)
-    // 3. Handle errors and retries
-    // 4. Return provider wallet ID and address
-
     if (!this.apiKey || !this.apiSecret) {
       throw new Error('Coinbase CDP API credentials not configured');
     }
 
-    // Mock implementation for MVP
-    // Replace with actual API call:
+    // Determine network based on currency
+    // USDC on Ethereum uses 'ethereum', USDC on Polygon uses 'polygon'
+    const network = params.currency === 'USDC' ? 'ethereum' : 'ethereum'; // Default to ethereum for USDC/USDT
+
+    // TODO: Implement actual Coinbase CDP Embedded Wallets API call
+    // Coinbase CDP Embedded Wallets API endpoint:
+    // POST /api/v1/wallet-sets/{walletSetId}/wallets
+    // 
+    // Request body:
+    // {
+    //   "network": "ethereum" | "polygon",
+    //   "currency": "USDC" | "USDT"
+    // }
+    //
+    // Response:
+    // {
+    //   "id": "wallet-id",
+    //   "address": "0x...",
+    //   "network": "ethereum",
+    //   "walletSetId": "..."
+    // }
+
+    // Mock implementation for MVP - replace with actual API call:
     /*
-    const response = await fetch(`${this.baseUrl}/v1/wallets`, {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const body = JSON.stringify({
+      network,
+      currency: params.currency,
+    });
+    
+    const signature = this.generateSignature('POST', `/api/v1/wallet-sets/${this.walletSetId}/wallets`, body, timestamp);
+
+    const response = await fetch(`${this.baseUrl}/api/v1/wallet-sets/${this.walletSetId}/wallets`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': this.apiKey,
-        'X-Signature': this.generateSignature('POST', '/v1/wallets', body),
+        'X-Timestamp': timestamp.toString(),
+        'X-Signature': signature,
       },
-      body: JSON.stringify({
-        currency: params.currency,
-        network: 'ethereum', // or 'polygon' for USDC
-      }),
+      body,
     });
 
     if (!response.ok) {
-      throw new Error(`Coinbase CDP API error: ${response.statusText}`);
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(`Coinbase CDP API error: ${error.message || response.statusText}`);
     }
 
     const data = await response.json();
@@ -71,14 +95,14 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
     };
     */
 
-    // Mock response for MVP
-    const mockWalletId = `coinbase_wallet_${Date.now()}`;
+    // Mock response for MVP (remove when implementing actual API)
+    const mockWalletId = `cb_wallet_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const mockAddress = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
     return {
       providerWalletId: mockWalletId,
       address: mockAddress,
-      network: 'ethereum',
+      network,
     };
   }
 
