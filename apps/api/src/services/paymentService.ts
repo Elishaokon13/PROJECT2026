@@ -4,7 +4,7 @@
 
 import type { FastifyInstance } from 'fastify';
 import { Transaction } from '../domain/transactions/index.js';
-import { LedgerService } from './ledger-service.js';
+import { LedgerService } from './ledgerService.js';
 import { NotFoundError, ValidationError } from '../errors/index.js';
 import type { Currency } from '../types/index.js';
 import { TransactionStatus } from '@prisma/client';
