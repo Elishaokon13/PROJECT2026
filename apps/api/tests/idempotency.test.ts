@@ -14,6 +14,18 @@ describe('Idempotency Service - Critical Tests', () => {
     db = new PrismaClient();
     idempotencyService = new IdempotencyService(db);
 
+    // Create test merchant if it doesn't exist
+    await db.merchant.upsert({
+      where: { id: testMerchantId },
+      create: {
+        id: testMerchantId,
+        name: 'Test Merchant',
+        apiKey: `test-api-key-${testMerchantId}`,
+        active: true,
+      },
+      update: {},
+    });
+
     // Clean up test data
     await db.idempotencyKey.deleteMany({
       where: {
