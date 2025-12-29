@@ -77,20 +77,31 @@ export class WalletService {
     }
 
     // Step 4: Create wallet via provider adapter
-    // TODO: Call Coinbase CDP adapter to create wallet
-    // const walletAddress = await this.walletAdapter.createWallet({
-    //   currency: params.currency,
-    //   userId: params.userId,
-    // });
+    let providerWalletId: string;
+    let address: string;
 
-    // For MVP, create wallet record with placeholder address
+    try {
+      const providerResult = await this.walletAdapter.createWallet({
+        currency: params.currency,
+      });
+      providerWalletId = providerResult.providerWalletId;
+      address = providerResult.address;
+    } catch (error) {
+      throw new ProviderError(
+        'Coinbase CDP',
+        `Failed to create wallet: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error,
+      );
+    }
+
+    // Step 5: Create wallet record in database
     const wallet = await this.db.wallet.create({
       data: {
         merchantId: params.merchantId,
         userId: params.userId,
         currency: params.currency,
-        address: '0x0000000000000000000000000000000000000000', // TODO: Get from provider
-        providerWalletId: null, // TODO: Get from provider
+        address,
+        providerWalletId,
         active: true,
       },
     });
