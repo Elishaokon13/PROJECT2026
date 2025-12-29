@@ -28,22 +28,17 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call WalletService.create()
-      // const wallet = await fastify.walletService.create({
-      //   merchantId: request.merchant.id,
-      //   userId: request.body.userId,
-      //   currency: request.body.currency,
-      // });
+      // Call WalletService.create() - enforces identity verification
+      // Will throw ValidationError if user is not verified
+      const wallet = await fastify.walletService.createWallet({
+        merchantId: request.merchant.id,
+        userId: request.body.userId,
+        currency: request.body.currency,
+      });
 
       return reply.status(201).send({
-        data: {
-          id: 'wallet-placeholder-id',
-          userId: request.body.userId,
-          currency: request.body.currency,
-          address: '0x0000000000000000000000000000000000000000',
-          createdAt: new Date().toISOString(),
-        },
-      } satisfies ApiResponse<unknown>);
+        data: wallet,
+      } satisfies ApiResponse<typeof wallet>);
     },
   );
 
