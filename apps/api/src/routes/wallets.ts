@@ -52,16 +52,23 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call WalletService.getById()
+      const wallet = await fastify.walletService.getWallet(
+        request.merchant.id,
+        request.params.walletId,
+      );
+
+      if (!wallet) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Wallet with id ${request.params.walletId} not found`,
+          },
+        });
+      }
+
       return reply.send({
-        data: {
-          id: request.params.walletId,
-          userId: 'user-id',
-          currency: 'USDC',
-          address: '0x0000000000000000000000000000000000000000',
-          createdAt: new Date().toISOString(),
-        },
-      } satisfies ApiResponse<unknown>);
+        data: wallet,
+      } satisfies ApiResponse<typeof wallet>);
     },
   );
 
