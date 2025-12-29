@@ -3,7 +3,7 @@
 // CRITICAL: Removes internal fields (providerWalletId)
 
 import type { Wallet as PrismaWallet } from '@prisma/client';
-import { toPublicId } from '../lib/public-ids.js';
+import { toPublicId } from '../lib/publicIds.js';
 import type { Wallet } from '../../sdk/src/types/api.js';
 
 export function transformWallet(wallet: PrismaWallet): Wallet {
