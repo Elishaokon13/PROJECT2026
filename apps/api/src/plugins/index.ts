@@ -12,6 +12,7 @@ import { payoutServicePlugin } from '../services/payout-service.js';
 import { identityServicePlugin } from '../services/identity-service.js';
 import { userServicePlugin } from '../services/user-service.js';
 import { walletServicePlugin } from '../services/wallet-service.js';
+import { paymentServicePlugin } from '../services/payment-service.js';
 
 export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
   // Register plugins in order
