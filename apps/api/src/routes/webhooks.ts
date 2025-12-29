@@ -3,9 +3,10 @@
 
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { AuthenticatedRequest, ApiResponse } from '../types/index.js';
+import type { AuthenticatedRequest, ApiResponse, PaginatedResponse } from '../types/index.js';
 import { transformWebhook } from '../transformers/webhookTransformer.js';
 import type { Currency } from '../types/index.js';
+import { fromPublicId } from '../lib/publicIds.js';
 
 const getWebhookParamsSchema = z.object({
   webhookId: z.string().uuid(),
