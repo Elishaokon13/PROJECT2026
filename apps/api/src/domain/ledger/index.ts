@@ -16,3 +16,13 @@
 // - release(idempotencyKey)
 // - getBalance(userId)
 
+export { Ledger } from './ledger.js';
+export type {
+  CreditParams,
+  DebitParams,
+  LockFundsParams,
+  ReleaseFundsParams,
+  SettleFundsParams,
+  Balance,
+  LedgerEntryResult,
+} from './types.js';
