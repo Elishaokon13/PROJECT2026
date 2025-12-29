@@ -249,12 +249,67 @@ Ledger.settle() OR Ledger.release()
   - Zod schemas for request/response validation
   - TypeScript types for authenticated requests, idempotent requests, pagination
 
-**Next Steps:**
-1. Install dependencies: `npm install` (will resolve TypeScript linting errors)
-2. Run Prisma migrations: `npm run db:migrate` (after installing dependencies)
-3. Generate Prisma client: `npm run db:generate`
-4. Implement remaining domain services (users, wallets, payouts)
-5. Implement adapters (Coinbase CDP, Zerocard)
+**Next Steps - Priority Order:**
+
+### Immediate (Foundation)
+1. **Install dependencies and run migrations**
+   - `npm install` (resolve TypeScript errors)
+   - `npm run db:migrate` (create database schema)
+   - `npm run db:generate` (generate Prisma client)
+   - Verify database connection works
+
+### High Priority (Core Functionality)
+2. **Implement User Service**
+   - Create UserService (currently routes have placeholders)
+   - Implement create, get, list operations
+   - Wire up to existing routes
+
+3. **Implement Transaction Domain & Payment Processing**
+   - Transaction domain for inbound stablecoin payments
+   - Payment processing service (Coinbase webhook → ledger credit)
+   - Handle payment webhooks and update ledger
+
+4. **Implement Coinbase CDP Wallet Adapter**
+   - Create wallet via Coinbase CDP API
+   - Get wallet address/balance from provider
+   - Handle Coinbase webhooks for payments
+   - Replace placeholder in WalletService
+
+5. **Implement Zerocard Off-Ramp Adapter**
+   - Initiate payout via Zerocard API
+   - Check payout status
+   - Handle Zerocard webhooks
+   - Replace placeholder in PayoutService.sendToProvider()
+
+6. **Implement Webhook Dispatch Service**
+   - Webhook event creation and storage
+   - Retry logic with exponential backoff
+   - Delivery tracking and status updates
+   - Handle webhook failures gracefully
+
+### Medium Priority (Integration & Polish)
+7. **Complete Authentication Plugin**
+   - Replace placeholder with database lookup
+   - Validate API keys against Merchant table
+   - Handle inactive merchants
+
+8. **Implement Notification Adapter**
+   - HTTP webhook delivery
+   - Signature generation
+   - Retry logic
+
+### Lower Priority (SDK & Testing)
+9. **Implement SDK**
+   - SDK client class
+   - Resource classes (Users, Wallets, Payouts, Identity)
+   - Type definitions matching API
+   - Error handling
+
+10. **Testing & Documentation**
+    - Unit tests for ledger (critical)
+    - Integration tests for API endpoints
+    - API documentation
+    - Webhook documentation
 
 ## Executor's Feedback or Assistance Requests
 
