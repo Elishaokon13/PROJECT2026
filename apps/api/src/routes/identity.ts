@@ -42,10 +42,13 @@ export async function identityRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
+      // Convert public user ID to internal ID
+      const internalUserId = fromPublicId('user', request.body.userId);
+      
       // Verify user belongs to merchant
       const user = await fastify.db.user.findFirst({
         where: {
-          id: request.body.userId,
+          id: internalUserId,
           merchantId: request.merchant.id,
         },
       });
@@ -60,13 +63,31 @@ export async function identityRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       const result = await fastify.identityService.submitVerification(
-        request.body.userId,
+        internalUserId,
         request.body.userData,
       );
 
+      // Get full verification from DB to transform
+      const verification = await fastify.db.identityVerification.findUnique({
+        where: { userId: internalUserId },
+      });
+
+      if (!verification) {
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Verification submitted but not found',
+          },
+        });
+      }
+
       return reply.status(201).send({
-        data: result,
-      } satisfies ApiResponse<typeof result>);
+        data: {
+          verification_id: result.verificationId,
+          provider_id: result.providerId,
+          status: 'pending',
+        },
+      });
     },
   );
 
