@@ -186,6 +186,7 @@ enum TransactionStatus {
 }
 
 // Payout (outbound stablecoin → fiat)
+// State machine: CREATED → FUNDS_LOCKED → SENT_TO_PROVIDER → COMPLETED/FAILED
 model Payout {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
@@ -202,8 +203,8 @@ model Payout {
   recipientName    String
   recipientBankCode String?
   
-  // Status
-  status PayoutStatus @default(PENDING)
+  // State machine status
+  status PayoutStatus @default(CREATED)
   
   // Idempotency
   idempotencyKey String @unique
@@ -211,19 +212,32 @@ model Payout {
   // Provider integration
   providerPayoutId String? // Zerocard payout ID
   providerStatus   String?
+  providerError    String? // Provider error message if failed
   
   // Ledger tracking
   lockEntryId String? // LedgerEntry ID for the LOCK operation
   
+  // State transition tracking
+  stateHistory Json? // Array of state transitions with timestamps
+  
+  // Retry tracking
+  retryCount Int @default(0)
+  lastRetryAt DateTime?
+  
   metadata Json?
+  
+  @@index([status])
+  @@index([idempotencyKey])
+  @@index([providerPayoutId])
+  @@index([createdAt])
 }
 
 enum PayoutStatus {
-  PENDING    // Created, funds locked
-  PROCESSING // Sent to provider
-  COMPLETED  // Successfully completed
-  FAILED     // Failed, funds released
-  CANCELLED  // Cancelled, funds released
+  CREATED           // Payout created, funds not yet locked
+  FUNDS_LOCKED      // Funds locked in ledger, ready for provider call
+  SENT_TO_PROVIDER  // Sent to off-ramp provider (Zerocard)
+  COMPLETED         // Successfully completed, funds settled
+  FAILED            // Failed, funds released
 }
 
 // Webhook Event (webhook dispatch tracking)
