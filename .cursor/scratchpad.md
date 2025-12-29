@@ -119,11 +119,11 @@ Ledger.settle() OR Ledger.release()
 
 ### Phase 3: Core Domain Models
 - [ ] Implement User domain (create, get, list)
-- [ ] Implement Wallet domain (create, get balance)
+- [x] **Implement Wallet domain** ✅ (create with identity enforcement, get balance)
 - [x] **Implement Ledger domain** ✅ (credit, debit, lockFunds, releaseFunds, settleFunds, getBalance)
-- [ ] Implement Identity domain (KYC verification flow)
+- [x] **Implement Identity domain** ✅ (KYC verification flow, wallet gating)
+- [x] **Implement Payout domain** ✅ (state machine, orchestration, webhook reconciliation)
 - [ ] Implement Transaction domain (inbound payment tracking)
-- [ ] Implement Payout domain (outbound payout creation and tracking)
 - [ ] Implement Webhook domain (event creation and dispatch)
 
 **Success Criteria:**
@@ -131,8 +131,11 @@ Ledger.settle() OR Ledger.release()
 - ✅ Ledger operations are atomic (database transactions)
 - ✅ Balance invariants enforced (no negative balances)
 - ✅ Idempotency support for all operations
+- ✅ Identity verification enforced before wallet creation
+- ✅ Payout state machine with atomic ledger operations
 - ✅ Strong TypeScript typing throughout
-- [ ] Other domain modules pending
+- [ ] Transaction domain pending (inbound payments)
+- [ ] Webhook dispatch domain pending
 
 ### Phase 4: Adapters (External Providers)
 - [ ] Coinbase CDP wallet adapter (create wallet, get balance, receive webhooks)
