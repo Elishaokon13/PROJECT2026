@@ -235,9 +235,10 @@ Ledger.settle() OR Ledger.release()
 
 **Next Steps:**
 1. Install dependencies: `npm install` (will resolve TypeScript linting errors)
-2. Proceed to Phase 2: Database & Prisma Setup
-3. Design the Prisma schema with all core entities
-4. Implement domain services (replace placeholders in routes)
+2. Run Prisma migrations: `npm run db:migrate` (after installing dependencies)
+3. Generate Prisma client: `npm run db:generate`
+4. Implement remaining domain services (users, wallets, payouts)
+5. Implement adapters (Coinbase CDP, Zerocard)
 
 ## Executor's Feedback or Assistance Requests
 
