@@ -101,10 +101,13 @@ export async function identityRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
+      // Convert public user ID to internal ID
+      const internalUserId = fromPublicId('user', request.params.userId);
+      
       // Verify user belongs to merchant
       const user = await fastify.db.user.findFirst({
         where: {
-          id: request.params.userId,
+          id: internalUserId,
           merchantId: request.merchant.id,
         },
       });
@@ -118,7 +121,7 @@ export async function identityRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
-      const verification = await fastify.identityService.getVerification(request.params.userId);
+      const verification = await fastify.identityService.getVerification(internalUserId);
 
       if (!verification) {
         return reply.status(404).send({
@@ -129,9 +132,23 @@ export async function identityRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
+      // Get full verification from DB to transform
+      const fullVerification = await fastify.db.identityVerification.findUnique({
+        where: { userId: internalUserId },
+      });
+
+      if (!fullVerification) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Identity verification for user ${request.params.userId} not found`,
+          },
+        });
+      }
+
       return reply.send({
-        data: verification,
-      } satisfies ApiResponse<typeof verification>);
+        data: transformIdentityVerification(fullVerification),
+      });
     },
   );
 }
