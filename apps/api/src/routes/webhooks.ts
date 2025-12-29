@@ -102,6 +102,20 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
         // - Payment received → credit ledger
         // - Update transaction status
         return reply.status(200).send({ received: true });
+      } else if (request.params.provider === 'kyc') {
+        // Handle KYC provider webhook (identity verification)
+        try {
+          await fastify.identityService.handleProviderWebhook(request.body);
+          return reply.status(200).send({ received: true, processed: true });
+        } catch (error) {
+          fastify.log.error({ err: error, body: request.body }, 'Failed to process KYC webhook');
+          return reply.status(500).send({
+            error: {
+              code: 'WEBHOOK_PROCESSING_ERROR',
+              message: 'Failed to process webhook',
+            },
+          });
+        }
       }
 
       return reply.status(200).send({ received: true });
