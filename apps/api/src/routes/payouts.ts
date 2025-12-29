@@ -38,32 +38,28 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: IdempotentRequest, reply) => {
-      // TODO: Call PayoutService.create()
-      // Flow:
-      // 1. Validate request
-      // 2. Check idempotency key (already done by middleware)
-      // 3. PayoutService.create() which:
-      //    - Creates PayoutIntent
-      //    - Calls Ledger.lockFunds() (atomic)
-      //    - Calls OfframpAdapter.createTransfer()
-      //    - Returns payout with status 'pending'
-      // const payout = await fastify.payoutService.create({
-      //   merchantId: request.merchant.id,
-      //   idempotencyKey: request.idempotencyKey,
-      //   ...request.body,
-      // });
+      // Call PayoutService.create() - idempotency handled at domain level
+      // The service will:
+      // 1. Check idempotency (returns stored response if duplicate)
+      // 2. Store idempotency key (if new request)
+      // 3. Lock funds via ledger (atomic)
+      // 4. Create payout record
+      // 5. Complete idempotency with response
+      const payout = await fastify.payoutService.createPayout({
+        merchantId: request.merchant.id,
+        idempotencyKey: request.idempotencyKey,
+        walletId: request.body.walletId,
+        amount: request.body.amount,
+        currency: request.body.currency,
+        recipientAccount: request.body.recipientAccount,
+        recipientName: request.body.recipientName,
+        recipientBankCode: request.body.recipientBankCode,
+        metadata: request.body.metadata,
+      });
 
       return reply.status(201).send({
-        data: {
-          id: 'payout-placeholder-id',
-          walletId: request.body.walletId,
-          amount: request.body.amount,
-          currency: request.body.currency,
-          status: 'pending',
-          idempotencyKey: request.idempotencyKey,
-          createdAt: new Date().toISOString(),
-        },
-      } satisfies ApiResponse<unknown>);
+        data: payout,
+      } satisfies ApiResponse<typeof payout>);
     },
   );
 
