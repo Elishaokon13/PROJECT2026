@@ -7,7 +7,7 @@
 // - Return domain-friendly types
 // - Cannot call DB directly (receive data, return results, domain handles persistence)
 
-export { IdentityAdapterImpl } from './identity-adapter.js';
+export { IdentityAdapterImpl } from './identityAdapter.js';
 export type {
   IdentityAdapter,
   SubmitVerificationParams,
