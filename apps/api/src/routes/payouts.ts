@@ -3,7 +3,7 @@
 
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { IdempotentRequest, ApiResponse } from '../types/index.js';
+import type { IdempotentRequest, ApiResponse, AuthenticatedRequest } from '../types/index.js';
 import { idempotencyMiddleware } from '../lib/idempotency.js';
 
 const createPayoutSchema = z.object({
