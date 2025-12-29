@@ -43,10 +43,16 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-3. Set up database:
+3. Set up database (Supabase):
+   - Create a Supabase project at https://supabase.com
+   - Get your connection string from: Settings → Database → Connection string
+   - Update `.env` with your `DATABASE_URL`
+   - Run migrations:
 ```bash
+cd apps/api
 npm run db:migrate
 ```
+   See [docs/supabase-setup.md](docs/supabase-setup.md) for detailed instructions.
 
 4. Start development server:
 ```bash
