@@ -1,0 +1,92 @@
+# Openly Architectural Guardrails
+
+## Critical Rules (Non-Negotiable)
+
+### 1. Domain/ is Sacred
+- **NO route may mutate balances directly** - All money logic lives in `domain/ledger/`
+- **Ledger must be updated before external calls** - Never call adapters before ledger operations
+- All balance checks, credit/debit operations, and fund locking must go through `domain/ledger/`
+
+### 2. Routes/ are Thin
+- Routes should ONLY:
+  - Validate input (Zod schemas)
+  - Call domain/service layer
+  - Return response
+- **No business logic in routes** - This prevents "fat controllers" (the #1 Node infra failure)
+- Routes delegate to services, services orchestrate domain logic
+
+### 3. Adapters/ Isolate Vendors
+- Coinbase CDP, Zerocard, KYC providers never leak into domain logic
+- Adapters:
+  - Abstract provider-specific details
+  - Handle provider errors and retries
+  - Return domain-friendly types
+- **Adapters cannot call DB directly** - They receive data, return results, domain handles persistence
+
+### 4. SDK is First-Class Citizen
+- SDK lives beside the API, not as an afterthought
+- **SDK cannot contain business logic** - It's a thin wrapper around API calls
+- Types must match API exactly
+- SDK enforces API discipline and DX empathy
+
+### 5. Money-Moving Endpoints
+- **All money endpoints require idempotency keys** - Every payout, transfer, withdrawal must be idempotent
+- Idempotency keys must be validated before any ledger operations
+- Retry-safe: endpoints must handle duplicate requests gracefully
+
+## TypeScript Requirements
+- `noUncheckedIndexedAccess: true` - Prevents 80% of fintech bugs
+- `exactOptionalPropertyTypes: true` - Stricter optional handling
+- `strict: true` - All strict checks enabled
+- **No `any` types** - Use `unknown` if type is truly unknown, then narrow
+
+## Correct Flow Example: Payout
+```
+API Route (validate input)
+  ↓
+PayoutService (orchestration)
+  ↓
+Ledger.lockFunds() (atomic, idempotent)
+  ↓
+OfframpAdapter.createTransfer() (external call)
+  ↓
+WebhookHandler (provider callback)
+  ↓
+Ledger.settle() OR Ledger.release() (finalize or rollback)
+```
+
+**No shortcuts. No hacks.**
+
+## Domain Module Ownership
+
+### domain/ledger
+- LedgerEntry
+- BalanceSnapshot
+- Lock/unlock funds
+- Idempotency enforcement
+- **This is the most important folder in the repo**
+
+### domain/payouts
+- PayoutIntent
+- PayoutStateMachine
+- Retry logic
+- Provider reconciliation
+
+### domain/wallets
+- Wallet lifecycle
+- Wallet ↔ user binding
+- Deposit address abstraction
+
+### domain/identity
+- KYC status
+- Identity → wallet gating
+
+## Code Review Checklist
+- [ ] No direct balance mutations in routes
+- [ ] Ledger updated before external calls
+- [ ] Idempotency keys on all money endpoints
+- [ ] Adapters don't call DB
+- [ ] SDK has no business logic
+- [ ] No `any` types
+- [ ] All optional properties handled correctly
+
