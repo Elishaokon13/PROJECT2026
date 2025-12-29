@@ -161,7 +161,11 @@ export class PaymentService {
 
 // Fastify plugin to inject payment service
 export async function paymentServicePlugin(fastify: FastifyInstance): Promise<void> {
-  const paymentService = new PaymentService(fastify.db, fastify.ledgerService);
+  const paymentService = new PaymentService(
+    fastify.db,
+    fastify.ledgerService,
+    fastify.webhookService,
+  );
   fastify.decorate('paymentService', paymentService);
 }
 
