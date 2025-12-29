@@ -48,6 +48,7 @@ export class PayoutService {
     private readonly db: FastifyInstance['db'],
     private readonly ledgerService: LedgerService,
     private readonly idempotencyService: FastifyInstance['idempotencyService'],
+    private readonly webhookService?: FastifyInstance['webhookService'],
   ) {
     this.stateMachine = new PayoutStateMachine(db);
     this.offrampAdapter = new ZerocardOfframpAdapter();
