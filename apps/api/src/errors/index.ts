@@ -10,7 +10,10 @@ export class AppError extends Error {
   ) {
     super(message);
     this.name = this.constructor.name;
-    Error.captureStackTrace(this, this.constructor);
+    // captureStackTrace is Node.js specific, safe to ignore if not available
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }
 
