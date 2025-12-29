@@ -42,7 +42,7 @@ export class WebhookService {
       data: {
         merchantId: params.merchantId,
         event: params.event,
-        payload: params.payload as Record<string, unknown>,
+        payload: params.payload as unknown,
         status: WebhookStatus.PENDING,
         url: webhookUrl,
         attempts: 0,
