@@ -3,8 +3,8 @@
 // CRITICAL: Removes internal fields (lockEntryId, providerPayoutId, idempotencyKey)
 
 import type { Payout as PrismaPayout } from '@prisma/client';
-import { toPublicId } from '../lib/public-ids.js';
-import { normalizePayoutStatus } from '../lib/status-normalizer.js';
+import { toPublicId } from '../lib/publicIds.js';
+import { normalizePayoutStatus } from '../lib/statusNormalizer.js';
 import type { Payout } from '../../sdk/src/types/api.js';
 
 export function transformPayout(payout: PrismaPayout): Payout {
