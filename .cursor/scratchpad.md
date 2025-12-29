@@ -359,6 +359,23 @@ These are all listed in `apps/api/package.json` dependencies and will be availab
 - ✅ Race condition handling (unique constraint violations)
 - ✅ IdempotencyService injected into Fastify instance
 
+**Payout State Machine Complete:**
+- ✅ Prisma schema with explicit payout states (CREATED, FUNDS_LOCKED, SENT_TO_PROVIDER, COMPLETED, FAILED)
+- ✅ PayoutStateMachine enforces valid transitions
+- ✅ PayoutService orchestrates full flow with state machine
+- ✅ Provider webhook handler for state reconciliation
+- ✅ Failed payouts automatically release funds
+- ✅ Retry support for failed payouts
+- ✅ State history tracking for auditability
+
+**Identity Verification Complete:**
+- ✅ Identity domain with verification status checks
+- ✅ Identity adapter abstraction (structure ready)
+- ✅ Wallet creation enforces verified identity
+- ✅ Identity verification endpoints (submit, get status)
+- ✅ Provider webhook handling for verification updates
+- ✅ Identity status stored and auditable
+
 ## Lessons
 
 - Folder structure follows domain-first organization
