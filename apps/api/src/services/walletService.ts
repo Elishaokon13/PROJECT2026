@@ -22,11 +22,14 @@ export interface WalletResult {
 }
 
 export class WalletService {
+  private walletAdapter: CoinbaseWalletAdapter;
+
   constructor(
     private readonly db: FastifyInstance['db'],
     private readonly identityService: FastifyInstance['identityService'],
-    // TODO: Add wallet adapter (Coinbase CDP)
-  ) {}
+  ) {
+    this.walletAdapter = new CoinbaseWalletAdapter();
+  }
 
   /**
    * Create wallet for a user
