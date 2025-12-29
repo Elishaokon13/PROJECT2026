@@ -221,19 +221,22 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
       };
     };
 
+    const walletId = webhook.wallet_id ?? webhook.walletId;
+    const data = webhook.data ?? {};
+
     return {
       event: (webhook.event as WalletWebhookResult['event']) ?? 'payment.received',
-      providerWalletId: webhook.wallet_id ?? webhook.walletId ?? '',
+      providerWalletId: walletId ?? '',
       data: {
-        walletId: webhook.wallet_id ?? webhook.walletId,
-        address: webhook.data?.address,
-        amount: webhook.data?.amount,
-        currency: webhook.data?.currency,
-        txHash: webhook.data?.txHash,
-        fromAddress: webhook.data?.fromAddress,
-        toAddress: webhook.data?.toAddress,
-        blockNumber: webhook.data?.blockNumber,
-        status: webhook.data?.status,
+        ...(walletId && { walletId }),
+        ...(data.address && { address: data.address }),
+        ...(data.amount && { amount: data.amount }),
+        ...(data.currency && { currency: data.currency }),
+        ...(data.txHash && { txHash: data.txHash }),
+        ...(data.fromAddress && { fromAddress: data.fromAddress }),
+        ...(data.toAddress && { toAddress: data.toAddress }),
+        ...(data.blockNumber && { blockNumber: data.blockNumber }),
+        ...(data.status && { status: data.status }),
       },
     };
   }
