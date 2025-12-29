@@ -230,7 +230,6 @@ export class PayoutService {
 
   /**
    * Send payout to provider (retry-safe)
-   * TODO: Implement actual Zerocard adapter call
    */
   private async sendToProvider(
     payoutId: string,
@@ -242,13 +241,26 @@ export class PayoutService {
       recipientBankCode?: string;
     },
   ): Promise<string> {
-    // TODO: Call Zerocard adapter
-    // For now, return a mock provider payout ID
-    // In production, this would:
-    // 1. Call Zerocard API
-    // 2. Handle retries with exponential backoff
-    // 3. Return provider payout ID
-    return `provider-payout-${payoutId}`;
+    try {
+      const result = await this.offrampAdapter.createPayout({
+        amount: params.amount,
+        currency: params.currency,
+        recipientAccount: params.recipientAccount,
+        recipientName: params.recipientName,
+        recipientBankCode: params.recipientBankCode,
+        metadata: {
+          payoutId,
+        },
+      });
+
+      return result.providerPayoutId;
+    } catch (error) {
+      throw new ProviderError(
+        'Zerocard',
+        `Failed to create payout: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error,
+      );
+    }
   }
 
   /**
