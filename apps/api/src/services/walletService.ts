@@ -2,8 +2,9 @@
 // CRITICAL: Enforces identity verification before wallet creation
 
 import type { FastifyInstance } from 'fastify';
-import { ValidationError, NotFoundError } from '../errors/index.js';
+import { ValidationError, NotFoundError, ProviderError } from '../errors/index.js';
 import type { Currency } from '../types/index.js';
+import { CoinbaseWalletAdapter } from '../adapters/wallet/index.js';
 
 export interface CreateWalletParams {
   merchantId: string;
