@@ -412,7 +412,17 @@ export class PayoutService {
       providerPayoutId,
     });
 
-    return this.getPayout(payout.wallet.merchantId, payoutId) as Promise<PayoutResult>;
+    // Get merchant ID from wallet
+    const wallet = await this.db.wallet.findUnique({
+      where: { id: payout.walletId },
+      select: { merchantId: true },
+    });
+
+    if (!wallet) {
+      throw new NotFoundError('Wallet', payout.walletId);
+    }
+
+    return this.getPayout(wallet.merchantId, payoutId) as Promise<PayoutResult>;
   }
 }
 
