@@ -117,20 +117,7 @@ export class PayoutService {
         throw new NotFoundError('Wallet', params.walletId);
       }
 
-      // Step 4: Lock funds via ledger (atomic operation)
-      const lockEntry = await this.ledgerService.lockFunds({
-        walletId: params.walletId,
-        currency: params.currency,
-        amount: params.amount,
-        idempotencyKey: params.idempotencyKey,
-        description: `Payout to ${params.recipientName}`,
-        metadata: {
-          payoutId: 'pending', // Will be updated after payout creation
-          recipientAccount: params.recipientAccount,
-        },
-      });
-
-      // Step 5: Create payout record
+      // Step 4: Create payout record (status: CREATED)
       const payout = await this.db.payout.create({
         data: {
           walletId: params.walletId,
@@ -139,29 +126,72 @@ export class PayoutService {
           recipientAccount: params.recipientAccount,
           recipientName: params.recipientName,
           recipientBankCode: params.recipientBankCode ?? undefined,
-          status: 'PENDING',
+          status: 'CREATED',
           idempotencyKey: params.idempotencyKey,
-          lockEntryId: lockEntry.id,
           metadata: params.metadata ? JSON.parse(JSON.stringify(params.metadata)) : undefined,
         },
       });
 
-      // Step 6: TODO - Call off-ramp adapter asynchronously
-      // This would trigger the actual payout to Zerocard
-      // For now, we'll mark it as pending
+      // Step 5: Lock funds via ledger (atomic operation)
+      // CRITICAL: Funds must be locked before provider call
+      const lockEntry = await this.ledgerService.lockFunds({
+        walletId: params.walletId,
+        currency: params.currency,
+        amount: params.amount,
+        idempotencyKey: params.idempotencyKey,
+        description: `Payout to ${params.recipientName}`,
+        metadata: {
+          payoutId: payout.id,
+          recipientAccount: params.recipientAccount,
+        },
+      });
+
+      // Step 6: Transition to FUNDS_LOCKED
+      await this.stateMachine.transitionToFundsLocked({
+        payoutId: payout.id,
+        lockEntryId: lockEntry.id,
+      });
+
+      // Step 7: Call off-ramp adapter (retry-safe)
+      // This is where we'd call the Zerocard adapter
+      // For now, we'll simulate it and transition to SENT_TO_PROVIDER
+      // TODO: Implement actual provider call with retry logic
+      const providerPayoutId = await this.sendToProvider(payout.id, {
+        amount: params.amount,
+        currency: params.currency,
+        recipientAccount: params.recipientAccount,
+        recipientName: params.recipientName,
+        recipientBankCode: params.recipientBankCode,
+      });
+
+      // Step 8: Transition to SENT_TO_PROVIDER
+      await this.stateMachine.transitionToSentToProvider({
+        payoutId: payout.id,
+        providerPayoutId,
+      });
+
+      // Refresh payout to get updated state
+      const updatedPayout = await this.db.payout.findUnique({
+        where: { id: payout.id },
+      });
+
+      if (!updatedPayout) {
+        throw new ValidationError(`Payout ${payout.id} not found after state transition`);
+      }
 
       const result: PayoutResult = {
-        id: payout.id,
-        walletId: payout.walletId,
-        amount: payout.amount,
-        currency: payout.currency as Currency,
-        status: payout.status as PayoutResult['status'],
-        idempotencyKey: payout.idempotencyKey,
-        lockEntryId: lockEntry.id,
-        createdAt: payout.createdAt,
+        id: updatedPayout.id,
+        walletId: updatedPayout.walletId,
+        amount: updatedPayout.amount,
+        currency: updatedPayout.currency as Currency,
+        status: updatedPayout.status as PayoutStatus,
+        idempotencyKey: updatedPayout.idempotencyKey,
+        lockEntryId: updatedPayout.lockEntryId,
+        providerPayoutId: updatedPayout.providerPayoutId,
+        createdAt: updatedPayout.createdAt,
       };
 
-      // Step 7: Complete idempotency with response
+      // Step 9: Complete idempotency with response
       await this.idempotencyService.completeIdempotency({
         merchantId: params.merchantId,
         key: params.idempotencyKey,
@@ -171,9 +201,124 @@ export class PayoutService {
 
       return result;
     } catch (error) {
+      // If payout was created, transition to FAILED and release funds
+      // This ensures funds are released safely on error
+      if (params.idempotencyKey) {
+        const payout = await this.db.payout.findUnique({
+          where: { idempotencyKey: params.idempotencyKey },
+        });
+
+        if (payout && payout.status !== 'COMPLETED' && payout.status !== 'FAILED') {
+          try {
+            await this.failPayout(payout.id, error instanceof Error ? error.message : 'Unknown error');
+          } catch (failError) {
+            // Log but don't throw - original error is more important
+            console.error('Failed to transition payout to FAILED:', failError);
+          }
+        }
+      }
+
       // Mark idempotency as failed to allow retry
       await this.idempotencyService.failIdempotency(params.merchantId, params.idempotencyKey);
       throw error;
+    }
+  }
+
+  /**
+   * Send payout to provider (retry-safe)
+   * TODO: Implement actual Zerocard adapter call
+   */
+  private async sendToProvider(
+    payoutId: string,
+    params: {
+      amount: MoneyAmount;
+      currency: Currency;
+      recipientAccount: string;
+      recipientName: string;
+      recipientBankCode?: string;
+    },
+  ): Promise<string> {
+    // TODO: Call Zerocard adapter
+    // For now, return a mock provider payout ID
+    // In production, this would:
+    // 1. Call Zerocard API
+    // 2. Handle retries with exponential backoff
+    // 3. Return provider payout ID
+    return `provider-payout-${payoutId}`;
+  }
+
+  /**
+   * Fail a payout and release funds
+   * Called when payout fails at any stage
+   * CRITICAL: Releases funds if they were locked
+   */
+  async failPayout(payoutId: string, reason: string, providerError?: string): Promise<void> {
+    const payout = await this.db.payout.findUnique({
+      where: { id: payoutId },
+    });
+
+    if (!payout) {
+      throw new NotFoundError('Payout', payoutId);
+    }
+
+    // Transition to FAILED state
+    await this.stateMachine.transitionToFailed({
+      payoutId,
+      reason,
+      providerError,
+    });
+
+    // Release funds if they were locked
+    if (payout.lockEntryId) {
+      await this.ledgerService.releaseFunds({
+        lockEntryId: payout.lockEntryId,
+        description: `Payout failed: ${reason}`,
+        metadata: {
+          payoutId,
+          reason,
+        },
+      });
+    }
+  }
+
+  /**
+   * Handle provider webhook - reconcile final state
+   * Called when provider sends webhook confirming payout status
+   */
+  async handleProviderWebhook(
+    providerPayoutId: string,
+    status: 'completed' | 'failed',
+    error?: string,
+  ): Promise<void> {
+    const payout = await this.db.payout.findFirst({
+      where: { providerPayoutId },
+    });
+
+    if (!payout) {
+      throw new NotFoundError('Payout', `with provider ID ${providerPayoutId}`);
+    }
+
+    if (status === 'completed') {
+      // Transition to COMPLETED and settle funds
+      await this.stateMachine.transitionToCompleted({
+        payoutId: payout.id,
+        providerStatus: 'completed',
+      });
+
+      // Settle funds in ledger (lock is finalized)
+      if (payout.lockEntryId) {
+        await this.ledgerService.settleFunds({
+          lockEntryId: payout.lockEntryId,
+          description: 'Payout completed by provider',
+          metadata: {
+            payoutId: payout.id,
+            providerPayoutId,
+          },
+        });
+      }
+    } else if (status === 'failed') {
+      // Transition to FAILED and release funds
+      await this.failPayout(payout.id, 'Provider reported failure', error);
     }
   }
 
