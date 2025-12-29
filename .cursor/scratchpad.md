@@ -108,14 +108,16 @@ Ledger.settle() OR Ledger.release()
 ### Phase 2: Database & Prisma Setup ✅
 - [x] Design Prisma schema (Merchant, User, Wallet, Transaction, Payout, LedgerEntry, IdentityVerification, WebhookEvent, IdempotencyKey)
 - [x] Set up Prisma client generation
-- [ ] Create initial migration (ready, needs `npm run db:migrate`)
+- [x] Generate Prisma client (✅ completed)
+- [x] Fix Prisma schema relations (Wallet model)
+- [ ] Create initial migration (requires DATABASE_URL in .env)
 - [x] Update database plugin with Prisma client
 
 **Success Criteria:**
 - ✅ Schema defines all core entities with proper relationships
-- ✅ Prisma client setup ready (will generate after migration)
-- ⏳ Migration ready to run
-- ✅ Database connection configured
+- ✅ Prisma client generated successfully
+- ⏳ Migration pending (requires DATABASE_URL environment variable)
+- ✅ Database connection configured in plugin
 
 ### Phase 3: Core Domain Models
 - [ ] Implement User domain (create, get, list)
