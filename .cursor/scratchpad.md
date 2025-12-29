@@ -234,6 +234,8 @@ None at this time.
 ## Lessons
 
 - Folder structure follows domain-first organization
-- All TypeScript configs use strict mode
+- All TypeScript configs use strict mode with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` to prevent fintech bugs
 - Workspace setup allows shared packages between API and SDK
+- **Architectural guardrails**: Domain is sacred, routes are thin, adapters isolate vendors, SDK is first-class
+- **Guardrails enforced**: No route may mutate balances directly, ledger before external calls, idempotency on all money endpoints
 
