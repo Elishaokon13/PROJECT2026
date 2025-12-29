@@ -107,15 +107,46 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
   }
 
   /**
-   * Get wallet address from Coinbase CDP
+   * Get wallet address from Coinbase CDP Embedded Wallet
+   * Retrieves the blockchain address for an embedded wallet
    */
   async getWalletAddress(providerWalletId: string): Promise<string> {
-    // TODO: Implement actual Coinbase CDP API call
-    // GET /v1/wallets/{walletId}
-
     if (!this.apiKey || !this.apiSecret) {
       throw new Error('Coinbase CDP API credentials not configured');
     }
+
+    // TODO: Implement actual Coinbase CDP Embedded Wallets API call
+    // GET /api/v1/wallet-sets/{walletSetId}/wallets/{walletId}
+    //
+    // Response includes:
+    // {
+    //   "id": "wallet-id",
+    //   "address": "0x...",
+    //   "network": "ethereum"
+    // }
+
+    // Mock implementation - replace with actual API call:
+    /*
+    const timestamp = Math.floor(Date.now() / 1000);
+    const path = `/api/v1/wallet-sets/${this.walletSetId}/wallets/${providerWalletId}`;
+    const signature = this.generateSignature('GET', path, '', timestamp);
+
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': this.apiKey,
+        'X-Timestamp': timestamp.toString(),
+        'X-Signature': signature,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get wallet address: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.address;
+    */
 
     // Mock implementation
     return `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
