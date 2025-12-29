@@ -31,18 +31,23 @@ export interface PayoutResult {
   walletId: string;
   amount: MoneyAmount;
   currency: Currency;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  status: PayoutStatus;
   idempotencyKey: string;
-  lockEntryId: string;
+  lockEntryId: string | null;
+  providerPayoutId: string | null;
   createdAt: Date;
 }
 
 export class PayoutService {
+  private stateMachine: PayoutStateMachine;
+
   constructor(
     private readonly db: FastifyInstance['db'],
     private readonly ledgerService: LedgerService,
     private readonly idempotencyService: FastifyInstance['idempotencyService'],
-  ) {}
+  ) {
+    this.stateMachine = new PayoutStateMachine(db);
+  }
 
   /**
    * Create a payout with idempotency handling at domain level
