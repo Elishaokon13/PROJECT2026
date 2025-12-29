@@ -275,6 +275,21 @@ These are all listed in `apps/api/package.json` dependencies and will be availab
 - ✅ Strong TypeScript typing with decimal.js for precise arithmetic
 - ✅ Balance computation from settled entries (not stored, computed on-demand)
 
+**Idempotency Implementation Complete:**
+- ✅ Prisma schema with IdempotencyKey model (persistent storage)
+- ✅ Idempotency domain fully implemented:
+  - `checkIdempotency()` - Check key and validate request hash
+  - `storeIdempotency()` - Store new idempotency key (PENDING)
+  - `completeIdempotency()` - Mark key as completed with response
+  - `failIdempotency()` - Mark key as failed (allows retry)
+- ✅ Request hash validation (SHA-256) prevents payload changes
+- ✅ Merchant scoping (keys scoped per merchant)
+- ✅ Response replay for duplicate requests
+- ✅ Domain-level enforcement (not just middleware)
+- ✅ Integrated with PayoutService
+- ✅ Race condition handling (unique constraint violations)
+- ✅ IdempotencyService injected into Fastify instance
+
 ## Lessons
 
 - Folder structure follows domain-first organization
