@@ -3,7 +3,7 @@
 
 import type { MoneyAmount, Currency } from '../../types/index.js';
 
-// Ledger entry types
+// Ledger entry types (must match Prisma schema enums)
 export type EntryType = 'CREDIT' | 'DEBIT' | 'LOCK' | 'RELEASE' | 'SETTLE';
 export type EntryStatus = 'PENDING' | 'SETTLED' | 'CANCELLED';
 
