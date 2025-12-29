@@ -33,3 +33,6 @@ apps/api/prisma/migrations/
 # TypeScript
 *.tsbuildinfo
 
+
+run.sh
+auto-commit.sh
