@@ -5,7 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import { dbPlugin } from './db.js';
 import { authPlugin } from './auth.js';
 import { corsPlugin } from './cors.js';
-import { rateLimitPlugin } from './rate-limit.js';
+import { rateLimitPlugin } from './rateLimit.js';
 import { ledgerServicePlugin } from '../services/ledgerService.js';
 import { idempotencyServicePlugin } from '../services/idempotencyService.js';
 import { payoutServicePlugin } from '../services/payoutService.js';
