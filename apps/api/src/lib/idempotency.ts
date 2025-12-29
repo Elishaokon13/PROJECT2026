@@ -1,10 +1,11 @@
 // Idempotency middleware for money-moving endpoints
-// Ensures requests with the same idempotency key are handled safely
+// Validates idempotency key format and attaches to request
+// NOTE: Actual idempotency checking happens at domain/service level
+// This middleware only validates format and extracts the key
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { IdempotencyKeyError } from '../errors/index.js';
-import type { IdempotentRequest } from '../types/index.js';
+import type { IdempotentRequest, AuthenticatedRequest } from '../types/index.js';
 
 const idempotencyKeySchema = z.string().min(1).max(255);
 
@@ -36,20 +37,8 @@ export async function idempotencyMiddleware(
     return;
   }
 
-  // TODO: Check if idempotency key was already used
-  // This should query the database for existing requests with this key
-  // const existingRequest = await request.server.db.idempotencyKey.findUnique({
-  //   where: { key: idempotencyKey },
-  // });
-  // if (existingRequest) {
-  //   if (existingRequest.status === 'completed') {
-  //     // Return the original response
-  //     return reply.status(existingRequest.statusCode).send(existingRequest.response);
-  //   }
-  //   throw new IdempotencyKeyError('Request with this idempotency key is already in progress');
-  // }
-
-  // Attach to request for use in route handlers
+  // Attach to request for use in route handlers and domain services
+  // Actual idempotency checking happens at domain/service level
   (request as IdempotentRequest).idempotencyKey = idempotencyKey;
 }
 
