@@ -20,14 +20,18 @@ This guide will help you set up Supabase for the Openly API.
 
 ## Step 2: Get Database Connection String
 
-1. In your Supabase project dashboard, go to **Settings** → **Database**
-2. Scroll down to **Connection string**
+**Your Supabase Project:** https://jrpzynhrdaqlnfbkuwbw.supabase.co
+
+1. Go to your project dashboard: https://supabase.com/dashboard/project/jrpzynhrdaqlnfbkuwbw/settings/database
+2. Scroll down to **Connection string** section
 3. Select **URI** tab
-4. Copy the connection string (it will look like):
+4. Copy the connection string OR use this format:
    ```
-   postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres
+   postgresql://postgres:[YOUR-PASSWORD]@db.jrpzynhrdaqlnfbkuwbw.supabase.co:5432/postgres?pgbouncer=true&connection_limit=1
    ```
 5. Replace `[YOUR-PASSWORD]` with your actual database password
+   - If you don't know your password, you can find it in **Settings** → **Database** → **Database password**
+   - Or reset it (⚠️ this will require reconnection)
 
 ## Step 3: Configure Environment Variables
 
