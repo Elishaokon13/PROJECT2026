@@ -7,6 +7,8 @@ import { authPlugin } from './auth.js';
 import { corsPlugin } from './cors.js';
 import { rateLimitPlugin } from './rate-limit.js';
 import { ledgerServicePlugin } from '../services/ledger-service.js';
+import { idempotencyServicePlugin } from '../services/idempotency-service.js';
+import { payoutServicePlugin } from '../services/payout-service.js';
 
 export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
   // Register plugins in order
@@ -15,4 +17,6 @@ export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
   await fastify.register(dbPlugin);
   await fastify.register(authPlugin);
   await fastify.register(ledgerServicePlugin);
+  await fastify.register(idempotencyServicePlugin);
+  await fastify.register(payoutServicePlugin);
 }
