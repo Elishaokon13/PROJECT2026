@@ -63,7 +63,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     {
       schema: {
         params: z.object({
-          provider: z.enum(['coinbase', 'zerocard']),
+          provider: z.enum(['coinbase', 'zerocard', 'kyc']),
         }),
       },
     },
