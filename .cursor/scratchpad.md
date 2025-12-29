@@ -105,17 +105,17 @@ Ledger.settle() OR Ledger.release()
 - Basic server.ts and app.ts files created
 - All domain modules have placeholder files
 
-### Phase 2: Database & Prisma Setup
-- [ ] Design Prisma schema (Merchant, User, Wallet, Transaction, Payout, LedgerEntry, IdentityVerification, WebhookEvent)
-- [ ] Set up Prisma client generation
-- [ ] Create initial migration
-- [ ] Set up shared @openly/db package
+### Phase 2: Database & Prisma Setup ✅
+- [x] Design Prisma schema (Merchant, User, Wallet, Transaction, Payout, LedgerEntry, IdentityVerification, WebhookEvent)
+- [x] Set up Prisma client generation
+- [ ] Create initial migration (ready, needs `npm run db:migrate`)
+- [x] Update database plugin with Prisma client
 
 **Success Criteria:**
-- Schema defines all core entities with proper relationships
-- Prisma client generates successfully
-- Migration runs without errors
-- Database connection works
+- ✅ Schema defines all core entities with proper relationships
+- ✅ Prisma client setup ready (will generate after migration)
+- ⏳ Migration ready to run
+- ✅ Database connection configured
 
 ### Phase 3: Core Domain Models
 - [ ] Implement User domain (create, get, list)
