@@ -259,6 +259,22 @@ These are all listed in `apps/api/package.json` dependencies and will be availab
 - Authentication plugin ready (needs database integration)
 - All architectural guardrails are enforced via code structure and comments
 
+**Ledger Implementation Complete:**
+- ✅ Prisma schema with LedgerEntry model (double-entry ledger)
+- ✅ Ledger domain fully implemented with all operations:
+  - `credit()` - Add funds (immediately settled)
+  - `debit()` - Remove funds with balance check (immediately settled)
+  - `lockFunds()` - Lock funds for pending operations (requires idempotency key)
+  - `releaseFunds()` - Release locked funds (cancelled operations)
+  - `settleFunds()` - Settle locked funds (completed operations)
+  - `getBalance()` - Compute balance from settled entries
+- ✅ Balance invariants enforced (no negative balances)
+- ✅ Atomic operations using database transactions
+- ✅ Idempotency support for all operations
+- ✅ LedgerService injected into Fastify instance
+- ✅ Strong TypeScript typing with decimal.js for precise arithmetic
+- ✅ Balance computation from settled entries (not stored, computed on-demand)
+
 ## Lessons
 
 - Folder structure follows domain-first organization
