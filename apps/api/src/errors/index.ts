@@ -69,8 +69,16 @@ export class WebhookError extends AppError {
   }
 }
 
+// Type imports for error handler
+import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { ZodError } from 'zod';
+
 // Error handler for Fastify
-export function errorHandler(error: Error, request: FastifyRequest, reply: FastifyReply) {
+export function errorHandler(
+  error: Error & { validation?: unknown; statusCode?: number },
+  request: FastifyRequest,
+  reply: FastifyReply,
+): void {
   const app = request.server;
 
   // Log error
@@ -82,45 +90,47 @@ export function errorHandler(error: Error, request: FastifyRequest, reply: Fasti
 
   // Handle known AppError
   if (error instanceof AppError) {
-    return reply.status(error.statusCode).send({
-      error: {
-        code: error.code,
-        message: error.message,
-        ...(error.details && { details: error.details }),
-      },
-    });
+    const response: { code: string; message: string; details?: unknown } = {
+      code: error.code,
+      message: error.message,
+    };
+    if (error.details) {
+      response.details = error.details;
+    }
+    reply.status(error.statusCode).send({ error: response });
+    return;
   }
 
   // Handle Zod validation errors
   if (error.name === 'ZodError') {
-    return reply.status(400).send({
+    const zodError = error as unknown as ZodError;
+    reply.status(400).send({
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Validation failed',
-        details: error.issues,
+        details: zodError.issues,
       },
     });
+    return;
   }
 
   // Handle Fastify validation errors
   if (error.validation) {
-    return reply.status(400).send({
+    reply.status(400).send({
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Validation failed',
         details: error.validation,
       },
     });
+    return;
   }
 
   // Unknown error
-  return reply.status(500).send({
+  reply.status(error.statusCode ?? 500).send({
     error: {
       code: 'INTERNAL_ERROR',
       message: app.config.nodeEnv === 'production' ? 'Internal server error' : error.message,
     },
   });
 }
-
-// Type imports for error handler
-import type { FastifyRequest, FastifyReply } from 'fastify';
