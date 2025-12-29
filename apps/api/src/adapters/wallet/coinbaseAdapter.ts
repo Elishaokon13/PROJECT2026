@@ -1,6 +1,7 @@
-// Coinbase CDP Wallet Adapter
-// Implements WalletAdapter interface for Coinbase CDP
+// Coinbase CDP Embedded Wallets Adapter
+// Implements WalletAdapter interface for Coinbase CDP Embedded Wallets
 // CRITICAL: This adapter isolates Coinbase-specific logic from domain
+// Documentation: https://docs.cdp.coinbase.com/embedded-wallets
 
 import type { WalletAdapter, CreateWalletParams, CreateWalletResult, WalletWebhookResult } from './types.js';
 import { config } from '../../config/index.js';
@@ -10,11 +11,19 @@ export class CoinbaseWalletAdapter implements WalletAdapter {
   private readonly apiKey: string;
   private readonly apiSecret: string;
   private readonly baseUrl: string;
+  private readonly walletSetId: string;
 
   constructor() {
     this.apiKey = config.coinbaseApiKey;
     this.apiSecret = config.coinbaseApiSecret;
-    this.baseUrl = config.coinbaseBaseUrl ?? 'https://api.coinbase.com';
+    // Coinbase CDP API base URL
+    this.baseUrl = config.coinbaseBaseUrl ?? 'https://api.cdp.coinbase.com';
+    // Wallet Set ID is required for embedded wallets
+    this.walletSetId = config.coinbaseCdpWalletSetId ?? '';
+    
+    if (!this.walletSetId) {
+      throw new Error('COINBASE_CDP_WALLET_SET_ID is required for embedded wallets');
+    }
   }
 
   /**
