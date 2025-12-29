@@ -4,6 +4,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse } from '../types/index.js';
+import { transformWebhook } from '../transformers/webhook-transformer.js';
 
 const getWebhookParamsSchema = z.object({
   webhookId: z.string().uuid(),

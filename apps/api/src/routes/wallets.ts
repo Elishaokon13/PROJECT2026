@@ -3,6 +3,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse } from '../types/index.js';
+import { transformWallet } from '../transformers/wallet-transformer.js';
+import { fromPublicId, toPublicId } from '../lib/public-ids.js';
 
 const createWalletSchema = z.object({
   userId: z.string().uuid(),
@@ -28,17 +30,34 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
+      // Convert public user ID to internal ID
+      const internalUserId = fromPublicId('user', request.body.userId);
+      
       // Call WalletService.create() - enforces identity verification
       // Will throw ValidationError if user is not verified
       const wallet = await fastify.walletService.createWallet({
         merchantId: request.merchant.id,
-        userId: request.body.userId,
+        userId: internalUserId,
         currency: request.body.currency,
       });
 
+      // Get full wallet from DB to transform
+      const fullWallet = await fastify.db.wallet.findUnique({
+        where: { id: wallet.id },
+      });
+
+      if (!fullWallet) {
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Wallet created but not found',
+          },
+        });
+      }
+
       return reply.status(201).send({
-        data: wallet,
-      } satisfies ApiResponse<typeof wallet>);
+        data: transformWallet(fullWallet),
+      });
     },
   );
 
@@ -52,9 +71,11 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
+      // Convert public ID to internal ID
+      const internalWalletId = fromPublicId('wallet', request.params.walletId);
       const wallet = await fastify.walletService.getWallet(
         request.merchant.id,
-        request.params.walletId,
+        internalWalletId,
       );
 
       if (!wallet) {
@@ -66,9 +87,23 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
+      // Get full wallet from DB to transform
+      const fullWallet = await fastify.db.wallet.findUnique({
+        where: { id: wallet.id },
+      });
+
+      if (!fullWallet) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Wallet with id ${request.params.walletId} not found`,
+          },
+        });
+      }
+
       return reply.send({
-        data: wallet,
-      } satisfies ApiResponse<typeof wallet>);
+        data: transformWallet(fullWallet),
+      });
     },
   );
 
@@ -82,19 +117,36 @@ export async function walletRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call Ledger.getBalance() - NOT WalletService directly
-      // Balance comes from ledger, not wallet provider
-      // const balance = await fastify.ledgerService.getBalance(request.params.walletId);
+      // Convert public ID to internal ID
+      const internalWalletId = fromPublicId('wallet', request.params.walletId);
+      
+      // Verify wallet exists and belongs to merchant
+      const wallet = await fastify.walletService.getWallet(
+        request.merchant.id,
+        internalWalletId,
+      );
+
+      if (!wallet) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Wallet with id ${request.params.walletId} not found`,
+          },
+        });
+      }
+
+      // Get balance from ledger
+      const balance = await fastify.ledgerService.getBalance(internalWalletId, wallet.currency);
 
       return reply.send({
         data: {
-          walletId: request.params.walletId,
-          currency: 'USDC',
-          available: '0.00',
-          locked: '0.00',
-          total: '0.00',
+          wallet_id: toPublicId('wallet', internalWalletId),
+          currency: balance.currency,
+          available: balance.available.toString(),
+          locked: balance.locked.toString(),
+          total: balance.total.toString(),
         },
-      } satisfies ApiResponse<unknown>);
+      });
     },
   );
 }

@@ -1,7 +1,7 @@
 // Payout state machine
 // Enforces valid state transitions and ensures ledger operations are atomic
 
-import type { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { ValidationError } from '../../errors/index.js';
 import type {
   PayoutStatus,

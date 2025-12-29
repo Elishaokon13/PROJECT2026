@@ -32,6 +32,7 @@ Building **Openly**, an API-first payments infrastructure that allows businesses
 3. **Provider Abstraction**: Wallet and off-ramp providers should be abstracted behind adapters for flexibility.
 4. **Webhook Reliability**: Webhook delivery must be retry-safe and observable.
 5. **KYC Integration**: Identity verification flow must be seamless but secure.
+6. **API Productization**: Public API must be clean, consistent, and hide internal complexity.
 
 ## Architectural Principles (Why This Structure Works)
 
@@ -120,7 +121,7 @@ Ledger.settle() OR Ledger.release()
 - ✅ Database connection configured in plugin
 
 ### Phase 3: Core Domain Models
-- [ ] Implement User domain (create, get, list)
+- [x] **Implement User domain** ✅ (create, get, list - UserService implemented)
 - [x] **Implement Wallet domain** ✅ (create with identity enforcement, get balance)
 - [x] **Implement Ledger domain** ✅ (credit, debit, lockFunds, releaseFunds, settleFunds, getBalance)
 - [x] **Implement Identity domain** ✅ (KYC verification flow, wallet gating)
@@ -173,33 +174,39 @@ Ledger.settle() OR Ledger.release()
 - [x] **Payout orchestration service** ✅ (state machine, ledger integration, idempotency)
 - [x] **Identity service** ✅ (verification orchestration, adapter integration)
 - [x] **Wallet service** ✅ (identity enforcement, provider integration ready)
+- [x] **User service** ✅ (create, get, list - fully implemented)
 - [ ] Payment processing service (webhook → ledger update)
-- [ ] User service (create, get, list - routes exist, service needs implementation)
 - [ ] Webhook dispatch service (retry logic, delivery tracking)
 
 **Success Criteria:**
 - ✅ Payout service coordinates ledger, state machine, and idempotency
 - ✅ Identity service orchestrates verification flow
 - ✅ Wallet service enforces identity verification
+- ✅ User service provides CRUD operations
 - ✅ Services coordinate domain logic correctly
 - ✅ Transaction boundaries are clear
 - ✅ Error handling is comprehensive
 - [ ] Payment processing service pending
-- [ ] User service needs implementation
 - [ ] Webhook dispatch service pending
 
-### Phase 7: SDK
-- [ ] SDK client class (API key, base URL)
-- [ ] Resource classes (Users, Wallets, Payouts, Webhooks)
-- [ ] Type definitions matching API
-- [ ] Error handling
-- [ ] Build and publish setup
+### Phase 7: SDK & API Productization ✅ IN PROGRESS
+- [x] **Public API contract defined** ✅ (docs/api-contract.md)
+- [x] **SDK client class designed** ✅ (Openly class with resources)
+- [x] **SDK types matching API** ✅ (apps/sdk/src/types/api.ts)
+- [x] **Webhook verification utilities** ✅ (WebhookVerifier)
+- [ ] **API normalization** (snake_case, ID prefixes, remove internals)
+- [ ] **Response transformers** (internal → public format)
+- [ ] **SDK build and publish setup**
 
 **Success Criteria:**
-- SDK is a thin wrapper around API
-- Types match API exactly
-- SDK can be imported and used
-- Examples work
+- ✅ Public API contract frozen and documented
+- ✅ SDK designed as primary interface
+- ✅ Types match API exactly
+- ✅ Automatic idempotency key generation
+- ✅ Webhook verification helpers
+- [ ] API responses normalized (snake_case, prefixes)
+- [ ] Internal concepts removed from public API
+- [ ] SDK can be imported and used
 
 ### Phase 8: Testing & Documentation
 - [ ] Unit tests for domain logic (especially ledger)
@@ -222,20 +229,23 @@ Ledger.settle() OR Ledger.release()
 - [x] Implement idempotency domain
 - [x] Implement payout state machine
 - [x] Implement identity verification
+- [x] Implement user service
 - [x] Scaffold API layer
+- [x] Design public API contract
+- [x] Design SDK interface
+- [ ] Normalize API responses (snake_case, prefixes)
 - [ ] Run database migrations
-- [ ] Implement user service
 - [ ] Implement transaction domain
 - [ ] Implement Coinbase CDP adapter
 - [ ] Implement Zerocard adapter
 - [ ] Implement webhook dispatch service
-- [ ] Implement SDK
+- [ ] Build and publish SDK
 - [ ] Write tests
 - [ ] Write documentation
 
 ## Current Status / Progress Tracking
 
-**Current Phase:** Phase 3-6 Hybrid - Core Infrastructure Complete, Adapters & Integration Pending
+**Current Phase:** API Productization Mode - Freezing Public API Contract & SDK Design
 
 **Completed:**
 - ✅ Created complete folder structure as specified
@@ -257,29 +267,34 @@ Ledger.settle() OR Ledger.release()
   - All routes follow thin controller pattern (validate → delegate → return)
   - Zod schemas for request/response validation
   - TypeScript types for authenticated requests, idempotent requests, pagination
+- ✅ **Public API Contract Defined:**
+  - Complete API surface documented (docs/api-contract.md)
+  - Stripe/Paystack-style naming conventions
+  - Consistent response envelopes
+  - Stable error codes
+  - Webhook event types defined
+- ✅ **SDK Designed:**
+  - Openly client class with resource methods
+  - Automatic idempotency key generation
+  - Webhook verification utilities
+  - Type-safe API calls
+  - Error handling with OpenlyError
 
 **Next Steps - Priority Order:**
 
-### Immediate (Foundation) - IN PROGRESS
-1. **Install dependencies and run migrations** ✅ PARTIALLY COMPLETE
-   - ✅ `npm install` (completed)
-   - ✅ `npm run db:generate` (Prisma client generated)
-   - ✅ Fixed Prisma schema relations (Wallet model)
-   - ⏳ `npm run db:migrate` (pending - requires DATABASE_URL in .env file)
-   - ⏳ Verify database connection works (pending migration)
+### Immediate (API Productization)
+1. **Normalize API Responses**
+   - Convert camelCase → snake_case
+   - Add resource ID prefixes (user_, wallet_, payout_)
+   - Remove internal fields (lockEntryId, providerPayoutId)
+   - Create response transformers
 
-**Note:** To complete migrations, create a `.env` file in the project root with:
-```
-DATABASE_URL="postgresql://user:password@localhost:5432/openly?schema=public"
-```
-Then run: `cd apps/api && npm run db:migrate`
+2. **Update Route Handlers**
+   - Apply response transformers
+   - Ensure consistent field naming
+   - Remove internal concepts from responses
 
 ### High Priority (Core Functionality)
-2. **Implement User Service**
-   - Create UserService (currently routes have placeholders)
-   - Implement create, get, list operations
-   - Wire up to existing routes
-
 3. **Implement Transaction Domain & Payment Processing**
    - Transaction domain for inbound stablecoin payments
    - Payment processing service (Coinbase webhook → ledger credit)
@@ -315,11 +330,10 @@ Then run: `cd apps/api && npm run db:migrate`
    - Retry logic
 
 ### Lower Priority (SDK & Testing)
-9. **Implement SDK**
-   - SDK client class
-   - Resource classes (Users, Wallets, Payouts, Identity)
-   - Type definitions matching API
-   - Error handling
+9. **Build and Publish SDK**
+   - Complete SDK implementation
+   - Build configuration
+   - Publish to npm
 
 10. **Testing & Documentation**
     - Unit tests for ledger (critical)
@@ -333,6 +347,7 @@ Then run: `cd apps/api && npm run db:migrate`
 - ✅ Dependencies installed successfully
 - ✅ Prisma client generated (v5.22.0)
 - ✅ Fixed Prisma schema: Added missing Wallet relations (transactions, payouts)
+- ✅ Fixed PrismaClient imports (changed from `import type` to regular `import`)
 - ✅ Prisma client verified working at runtime
 - ⏳ Database migration pending (requires DATABASE_URL environment variable)
 
@@ -349,14 +364,6 @@ Some TypeScript linter errors for PrismaClient imports may appear until the lang
 
 **Note on npm audit:**
 4 moderate vulnerabilities found in dev dependencies (vitest/esbuild). These are development-only and don't affect production. Can be addressed later with `npm audit fix --force` (may require breaking changes).
-
-**Note on Linting Errors:**
-Current TypeScript linting errors are expected and will resolve after running `npm install`. The errors are due to missing type definitions for:
-- `fastify` and `@fastify/*` packages
-- `zod` package
-- `@prisma/client` package
-
-These are all listed in `apps/api/package.json` dependencies and will be available after installation.
 
 **API Scaffolding Complete:**
 - All route handlers follow the thin controller pattern
@@ -413,6 +420,25 @@ These are all listed in `apps/api/package.json` dependencies and will be availab
 - ✅ Provider webhook handling for verification updates
 - ✅ Identity status stored and auditable
 
+**User Service Complete:**
+- ✅ UserService implemented with create, getById, list operations
+- ✅ Merchant scoping enforced (users belong to merchants)
+- ✅ Email uniqueness validation per merchant
+- ✅ Pagination support for list operations
+- ✅ Proper error handling (NotFoundError, ValidationError)
+- ✅ Wired up to existing routes (replaced placeholders)
+- ✅ Registered as Fastify plugin
+
+**API Productization - In Progress:**
+- ✅ Public API contract frozen (docs/api-contract.md)
+- ✅ SDK interface designed (Openly client class)
+- ✅ SDK types matching API contract
+- ✅ Webhook verification utilities
+- ✅ API normalization plan created
+- [ ] API response normalization (snake_case, ID prefixes)
+- [ ] Response transformers implementation
+- [ ] Remove internal concepts from public API
+
 ## Lessons
 
 - Folder structure follows domain-first organization
@@ -422,3 +448,4 @@ These are all listed in `apps/api/package.json` dependencies and will be availab
 - **Guardrails enforced**: No route may mutate balances directly, ledger before external calls, idempotency on all money endpoints
 - **State machine pattern**: Explicit states prevent invalid transitions and ensure atomic operations
 - **Identity gating**: Wallet creation properly enforces identity verification at service level
+- **API productization**: Public API must hide internal complexity (ledger, locks, providers)

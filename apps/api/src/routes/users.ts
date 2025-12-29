@@ -4,6 +4,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AuthenticatedRequest, ApiResponse, PaginatedResponse } from '../types/index.js';
+import { transformUser } from '../transformers/user-transformer.js';
+import { fromPublicId } from '../lib/public-ids.js';
 
 // Request/Response schemas
 const createUserSchema = z.object({
@@ -51,22 +53,17 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call UserService.create()
-      // const user = await fastify.userService.create({
-      //   merchantId: request.merchant.id,
-      //   ...request.body,
-      // });
-
-      // Placeholder response
-      const user = {
-        id: 'user-placeholder-id',
+      // Call UserService.create()
+      const user = await fastify.userService.createUser({
+        merchantId: request.merchant.id,
         email: request.body.email,
         firstName: request.body.firstName,
         lastName: request.body.lastName,
-        createdAt: new Date().toISOString(),
-      };
+        phoneNumber: request.body.phoneNumber,
+        metadata: request.body.metadata,
+      });
 
-      return reply.status(201).send({ data: user } satisfies ApiResponse<typeof user>);
+      return reply.status(201).send({ data: transformUser(user) });
     },
   );
 
@@ -80,18 +77,23 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call UserService.getById()
-      // const user = await fastify.userService.getById(request.merchant.id, request.params.userId);
+      // Convert public ID to internal ID
+      const internalUserId = fromPublicId('user', request.params.userId);
+      const user = await fastify.userService.getUserById(
+        request.merchant.id,
+        internalUserId,
+      );
 
-      return reply.send({
-        data: {
-          id: request.params.userId,
-          email: 'user@example.com',
-          firstName: 'John',
-          lastName: 'Doe',
-          createdAt: new Date().toISOString(),
-        },
-      } satisfies ApiResponse<unknown>);
+      if (!user) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `User with id ${request.params.userId} not found`,
+          },
+        });
+      }
+
+      return reply.send({ data: transformUser(user) });
     },
   );
 
@@ -105,21 +107,16 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
-      // TODO: Call UserService.list()
-      // const { data, total } = await fastify.userService.list(request.merchant.id, {
-      //   limit: request.query.limit,
-      //   offset: request.query.offset,
-      // });
+      const result = await fastify.userService.listUsers({
+        merchantId: request.merchant.id,
+        limit: request.query.limit,
+        offset: request.query.offset,
+      });
 
       return reply.send({
-        data: [],
-        pagination: {
-          limit: request.query.limit,
-          offset: request.query.offset,
-          total: 0,
-          hasMore: false,
-        },
-      } satisfies PaginatedResponse<unknown>);
+        data: result.data.map(transformUser),
+        pagination: result.pagination,
+      });
     },
   );
 }

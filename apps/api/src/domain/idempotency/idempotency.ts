@@ -2,7 +2,7 @@
 // Handles persistent idempotency key tracking and validation
 // CRITICAL: Idempotency is enforced at domain/service level, not just middleware
 
-import type { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { createHash } from 'crypto';
 import { IdempotencyKeyError, ValidationError } from '../../errors/index.js';
 import type {

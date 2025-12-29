@@ -5,6 +5,8 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { IdempotentRequest, ApiResponse, AuthenticatedRequest } from '../types/index.js';
 import { idempotencyMiddleware } from '../lib/idempotency.js';
+import { transformPayout } from '../transformers/payout-transformer.js';
+import { fromPublicId } from '../lib/public-ids.js';
 
 const createPayoutSchema = z.object({
   walletId: z.string().uuid(),
@@ -45,10 +47,13 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
       // 3. Lock funds via ledger (atomic)
       // 4. Create payout record
       // 5. Complete idempotency with response
+      // Convert public wallet ID to internal ID
+      const internalWalletId = fromPublicId('wallet', request.body.walletId);
+      
       const payout = await fastify.payoutService.createPayout({
         merchantId: request.merchant.id,
         idempotencyKey: request.idempotencyKey,
-        walletId: request.body.walletId,
+        walletId: internalWalletId,
         amount: request.body.amount,
         currency: request.body.currency,
         recipientAccount: request.body.recipientAccount,
@@ -57,9 +62,23 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
         metadata: request.body.metadata,
       });
 
+      // Get full payout from DB to transform
+      const fullPayout = await fastify.db.payout.findUnique({
+        where: { id: payout.id },
+      });
+
+      if (!fullPayout) {
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Payout created but not found',
+          },
+        });
+      }
+
       return reply.status(201).send({
-        data: payout,
-      } satisfies ApiResponse<typeof payout>);
+        data: transformPayout(fullPayout),
+      });
     },
   );
 
@@ -73,9 +92,11 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
       },
     },
     async (request: AuthenticatedRequest, reply) => {
+      // Convert public ID to internal ID
+      const internalPayoutId = fromPublicId('payout', request.params.payoutId);
       const payout = await fastify.payoutService.getPayout(
         request.merchant.id,
-        request.params.payoutId,
+        internalPayoutId,
       );
 
       if (!payout) {
@@ -87,9 +108,23 @@ export async function payoutRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
+      // Get full payout from DB to transform
+      const fullPayout = await fastify.db.payout.findUnique({
+        where: { id: payout.id },
+      });
+
+      if (!fullPayout) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: `Payout with id ${request.params.payoutId} not found`,
+          },
+        });
+      }
+
       return reply.send({
-        data: payout,
-      } satisfies ApiResponse<typeof payout>);
+        data: transformPayout(fullPayout),
+      });
     },
   );
 }
