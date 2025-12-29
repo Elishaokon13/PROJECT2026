@@ -6,13 +6,13 @@ import { dbPlugin } from './db.js';
 import { authPlugin } from './auth.js';
 import { corsPlugin } from './cors.js';
 import { rateLimitPlugin } from './rate-limit.js';
-import { ledgerServicePlugin } from '../services/ledger-service.js';
-import { idempotencyServicePlugin } from '../services/idempotency-service.js';
-import { payoutServicePlugin } from '../services/payout-service.js';
-import { identityServicePlugin } from '../services/identity-service.js';
-import { userServicePlugin } from '../services/user-service.js';
-import { walletServicePlugin } from '../services/wallet-service.js';
-import { paymentServicePlugin } from '../services/payment-service.js';
+import { ledgerServicePlugin } from '../services/ledgerService.js';
+import { idempotencyServicePlugin } from '../services/idempotencyService.js';
+import { payoutServicePlugin } from '../services/payoutService.js';
+import { identityServicePlugin } from '../services/identityService.js';
+import { userServicePlugin } from '../services/userService.js';
+import { walletServicePlugin } from '../services/walletService.js';
+import { paymentServicePlugin } from '../services/paymentService.js';
 
 export async function registerPlugins(fastify: FastifyInstance): Promise<void> {
   // Register plugins in order
