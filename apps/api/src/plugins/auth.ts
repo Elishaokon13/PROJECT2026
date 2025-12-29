@@ -2,7 +2,7 @@
 // Validates API keys from Authorization header
 
 import type { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { UnauthorizedError } from '../errors/index.js';
+import { UnauthorizedError, ForbiddenError } from '../errors/index.js';
 
 // Extend FastifyRequest to include merchant info
 declare module 'fastify' {
